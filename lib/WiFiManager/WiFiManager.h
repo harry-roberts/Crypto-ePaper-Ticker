@@ -10,7 +10,7 @@ public:
     WiFiManager(String ssid, String password);
 
     bool isConnected();
-    String getCryptoPrice(String crypto);
+    float getCryptoPrice(String crypto);
 
 private:
     String m_ssid;
