@@ -23,10 +23,10 @@ bool WiFiManager::isConnected()
     return WiFi.status() == WL_CONNECTED;
 }
 
-String WiFiManager::getCryptoPrice(String crypto)
+float WiFiManager::getCryptoPrice(String crypto)
 {
     if (!isConnected())
-        return "";
+        return -1;
 
     const char* server = "api.binance.com";
     String content;
@@ -41,7 +41,7 @@ String WiFiManager::getCryptoPrice(String crypto)
     {
         Serial.println("Connected to server");
         // Make a HTTP request:
-        m_client.println("GET https://api.binance.com/api/v3/ticker/price?symbol=" + crypto + "GBP HTTP/1.0");
+        m_client.println("GET https://api.binance.com/api/v3/ticker/price?symbol=" + crypto + "USDT HTTP/1.0"); // need to find a way to add £ symbol
         m_client.println("Host: " + String(server));
         m_client.println("Connection: close");
         m_client.println();
@@ -66,15 +66,18 @@ String WiFiManager::getCryptoPrice(String crypto)
             Serial.println("Reading content to JSON");
             deserializeJson(doc, content);
 
-            String symbol = doc["symbol"];
-            String price = doc[String("price")];
-            Serial.println("symbol: " + symbol + " has price: " + price);
-
-            return price;
+            if (doc.containsKey("symbol") && doc.containsKey("price"))
+            {
+                String symbol = doc["symbol"];
+                String price = doc["price"];
+                Serial.println("symbol: " + symbol + " has price: " + price);
+                return price.toFloat();
+            }
+            
         }
 
         m_client.stop();
     }
 
-    return "";    
+    return -1;
 }

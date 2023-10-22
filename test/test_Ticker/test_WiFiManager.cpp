@@ -25,5 +25,5 @@ TEST_F(WiFiManagerTest, data)
 {
     WiFiManager wm(login_ssid, login_password);
     EXPECT_EQ(wm.isConnected(), true);
-    EXPECT_THAT(wm.getCryptoPrice("BTC").c_str(), ::testing::MatchesRegex("[0-9]+.[0-9]+"));
+    EXPECT_GT(wm.getCryptoPrice("BTC"), 0);
 }
