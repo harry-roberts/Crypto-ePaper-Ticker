@@ -12,14 +12,14 @@ class DisplayManager
 public:
     DisplayManager();
 
-    void writePriceDisplay(float price, String crypto, String fiat);
+    void writePriceDisplay(float price, const String& crypto, const String& fiat, const String& bat);
     void hibernate();
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
     void addLines();
-    void writeMainPrice(String price);
-    void writeCrypto(String price);
+    void writeMainPrice(const String& price);
+    void writeCrypto(const String& price);
     String formatPriceString(float price);
     void formatCommas(char *buf, int price);
 

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <Arduino.h>
+#include "compile_time.h"
 
 // ------------------------------------------------------------------------
 // Note for running tests on ESP8266 (probably other Arduino boards also):
@@ -20,6 +21,16 @@
 void setup()
 {
     Serial.begin(115200); // test_speed in platformio.ini
+    delay(200);
+    Serial.println();
+    Serial.print("Using: ");
+    Serial.print(UNIX_TIMESTAMP); // see compile_time.h
+    Serial.print(" as test timestamp (");
+    Serial.print(__DATE__);
+    Serial.print(" at ");
+    Serial.print(__TIME__);
+    Serial.println(")");
+    Serial.println();
 
     ::testing::InitGoogleTest();
 

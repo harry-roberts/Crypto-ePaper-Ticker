@@ -1,6 +1,7 @@
 #include "DisplayManager.h"
 
 #include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
 
 DisplayManager::DisplayManager() :
     m_display(GxEPD2_213_BN(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4))
@@ -9,7 +10,7 @@ DisplayManager::DisplayManager() :
     m_display.setRotation(1);
 }
 
-void DisplayManager::writePriceDisplay(float price, String crypto, String fiat)
+void DisplayManager::writePriceDisplay(float price, const String& crypto, const String& fiat, const String& bat)
 {    
     m_display.setFullWindow();
     m_display.firstPage();
@@ -17,8 +18,14 @@ void DisplayManager::writePriceDisplay(float price, String crypto, String fiat)
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(fiat + formatPriceString(price));
+        writeMainPrice(fiat + formatPriceString(price)); // need to find a way to add £/€ symbol
         writeCrypto(crypto);
+
+        // temporary battery voltage monitoring
+        m_display.setFont(&FreeSans18pt7b);
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setCursor(30, 110);
+        m_display.print(bat);
     }
     while (m_display.nextPage());
 }
@@ -39,7 +46,7 @@ void DisplayManager::addLines()
                        GxEPD_BLACK);
 }
 
-void DisplayManager::writeMainPrice(String price)
+void DisplayManager::writeMainPrice(const String& price)
 {
     m_display.setFont(&FreeSans18pt7b);
     m_display.setTextColor(GxEPD_BLACK);
@@ -54,7 +61,7 @@ void DisplayManager::writeMainPrice(String price)
     m_display.print(price);
 }
 
-void DisplayManager::writeCrypto(String crypto)
+void DisplayManager::writeCrypto(const String& crypto)
 {
     m_display.setFont(&FreeSans18pt7b);
     m_display.setTextColor(GxEPD_WHITE);
