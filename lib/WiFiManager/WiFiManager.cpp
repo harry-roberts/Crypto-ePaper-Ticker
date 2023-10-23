@@ -1,9 +1,10 @@
 #include "WiFiManager.h"
 #include <ArduinoJson.h>
 
-WiFiManager::WiFiManager(String ssid, String password) :
+WiFiManager::WiFiManager(const String& ssid, const String& password) :
     m_ssid(ssid),
-    m_password(password)
+    m_password(password),
+    m_request(new RequestBinance())
 {
     WiFi.begin(m_ssid, m_password);
     int retries = 0;
@@ -18,31 +19,46 @@ WiFiManager::WiFiManager(String ssid, String password) :
     }
 }
 
+String WiFiManager::getSsid()
+{
+    return m_ssid;
+}
+
 bool WiFiManager::isConnected()
 {
     return WiFi.status() == WL_CONNECTED;
 }
 
-float WiFiManager::getCryptoPrice(String crypto)
+float WiFiManager::getCurrentPrice(const String& crypto, const String& fiat)
+{
+    String url = m_request->urlCurrentPrice(crypto, fiat);
+    return m_request->currentPrice(getUrlContent(m_request->getServer(), url));
+}
+
+uint32_t WiFiManager::getCurrentTime()
+{
+    String url = m_request->urlCurrentTime();
+    return m_request->currentTime(getUrlContent(m_request->getServer(), url));
+}
+
+String WiFiManager::getUrlContent(const String& server, const String& url)
 {
     if (!isConnected())
-        return -1;
+        return "";
 
-    const char* server = "api.binance.com";
     String content;
-    DynamicJsonDocument doc(96); // https://arduinojson.org/v6/assistant/#/step1
 
     Serial.println("\nStarting connection to server");
     m_client.setInsecure(); //skip verification - binance only accepts https but we don't need it secure
 
-    if (!m_client.connect(server, 443))
+    if (!m_client.connect(server.c_str(), 443))
         Serial.println("Connection failed");
     else 
     {
         Serial.println("Connected to server");
         // Make a HTTP request:
-        m_client.println("GET https://api.binance.com/api/v3/ticker/price?symbol=" + crypto + "USDT HTTP/1.0"); // need to find a way to add £ symbol
-        m_client.println("Host: " + String(server));
+        m_client.println("GET " + url + " HTTP/1.0");
+        m_client.println("Host: " + server);
         m_client.println("Connection: close");
         m_client.println();
 
@@ -63,21 +79,12 @@ float WiFiManager::getCryptoPrice(String crypto)
                 char c = m_client.read();
                 content.concat(c);
             }
-            Serial.println("Reading content to JSON");
-            deserializeJson(doc, content);
-
-            if (doc.containsKey("symbol") && doc.containsKey("price"))
-            {
-                String symbol = doc["symbol"];
-                String price = doc["price"];
-                Serial.println("symbol: " + symbol + " has price: " + price);
-                return price.toFloat();
-            }
-            
+            Serial.println("Received content");
+            return content;
         }
 
         m_client.stop();
     }
 
-    return -1;
+    return "";
 }
