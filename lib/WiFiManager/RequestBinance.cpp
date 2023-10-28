@@ -28,12 +28,7 @@ String RequestBinance::urlPriceAtTime(uint32_t unix, const String& crypto, const
             String(unix) + "000&endTime=" + String(unix+60) + "000&limit=1";
 }
 
-String RequestBinance::urlCurrentTime()
-{
-    return "https://api.binance.com/api/v3/time";
-}
-
-float RequestBinance::currentPrice(const String& content)
+bool RequestBinance::currentPrice(const String& content, float& price_out)
 {
     Serial.println("RequestBinance::currentPrice: content = " + content);
     DynamicJsonDocument doc(96); // https://arduinojson.org/v6/assistant/#/step1
@@ -44,31 +39,31 @@ float RequestBinance::currentPrice(const String& content)
         String symbol = doc["symbol"];
         String price = doc["price"];
         Serial.println("symbol: " + symbol + " has price: " + price);
-        return price.toFloat();
+        price_out = price.toFloat();
+        return true;
     }
 
-    return -1;
+    return false;
 }
 
-uint32_t RequestBinance::currentTime(const String& content)
+bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
 {
-    Serial.println("RequestBinance::currentTime: content = " + content);
-    DynamicJsonDocument doc(96); // https://arduinojson.org/v6/assistant/#/step1
-    deserializeJson(doc, content);
+    Serial.println("RequestBinance::priceAtTime: content = " + content);
 
-    if (doc.containsKey("serverTime"))
-    {
-        String serverTime = doc["serverTime"];
-        // binance gives milliseconds, remove last 3 digits
-        serverTime = serverTime.substring(0, serverTime.length()-3);
-        uint32_t serverTimeInt = static_cast<uint32_t>(std::stoul(serverTime.c_str()));
-        Serial.print("server time string int: ");
-        Serial.println(serverTimeInt);
-        return serverTimeInt;
-    }
+    // for binance we will use the open price of this kline
+    // content e.g:
+    // [[1697382420000,"22138.72000000","22138.72000000","22138.72000000","22138.72000000","0.00000000",1697382479999,"0.00000000",0,"0.00000000","0.00000000","0"]]
+    // we want this     ^^^^^^^^^^^^^^
+    // can get string between first two commas
 
-    return 0;
+    int firstComma = content.indexOf(",");
+    int secondComma = content.indexOf(",", firstComma+1);
+
+    priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
+    Serial.print("priceAtTime_out = ");
+    Serial.println(priceAtTime_out);
+
+    return true;
 }
-
 
 #endif

@@ -12,8 +12,8 @@ class DisplayManager
 public:
     DisplayManager();
 
-    void writeDisplay(const String& crypto, const String& fiat, float mainPrice, float pctOneDay, 
-                      float pctOneWeek, float pctOneYear, const String& dayMonth, const String& time, 
+    void writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
+                      float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
                       int batteryPercent);
     void hibernate();
 
@@ -24,6 +24,7 @@ private:
     void writeCrypto(const String& price);
     void writeDateTime(const String& dayMonth, const String& time);
     void writeBattery(int batPct);
+    void writePriceOneDay(float mainPrice, float priceOneDay);
     String formatPriceString(float price);
     void formatCommas(char *buf, int price);
 

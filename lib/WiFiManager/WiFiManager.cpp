@@ -16,7 +16,72 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
     if (WiFi.status() == WL_CONNECTED)
     {
         Serial.println("Connected to " + m_ssid);
+
+        const char* ntpServer = "pool.ntp.org";
+        Serial.println("Getting time from ntp");
+        configTime(0, 0, ntpServer);
+
+        struct tm timeinfo;
+
+        Serial.println("Setting timezone to London");
+        setenv("TZ", "GMT0BST,M3.5.0/1,M10.5.0", 1); // will be in config
+        tzset();
+
+        bool gotTime = false;
+        int timeRetries = 0;
+
+        while (!gotTime && timeRetries < 3)
+        {
+            gotTime = getTime(timeinfo);
+            if (gotTime)
+            {
+                setTimeVars(timeinfo);
+                Serial.print("Time: ");
+                Serial.print(m_dayMonth);
+                Serial.print(" ");
+                Serial.println(m_time);
+                Serial.print("Epoch: ");
+                Serial.println(m_epoch);
+                timeRetries++;
+            }
+            delay(1000);
+        }
     }
+}
+
+bool WiFiManager::getTime(tm& timeinfo)
+{
+    if(!getLocalTime(&timeinfo))
+    {
+        Serial.println("Failed to obtain time");
+        return false;
+    }
+    return true;
+}
+
+void WiFiManager::setTimeVars(tm& timeinfo)
+{
+    char buf[20];
+    strftime(buf, 20, "%e %b", &timeinfo);
+    m_dayMonth = String(buf);
+
+    char buf2[20];
+    strftime(buf2, 20, "%H:%M", &timeinfo);
+    m_time = String(buf2);
+
+    time_t now;
+    time(&now);
+    m_epoch = now;
+}
+
+String WiFiManager::getDayMonthStr()
+{
+    return m_dayMonth;
+}
+
+String WiFiManager::getTimeStr()
+{
+    return m_time;
 }
 
 String WiFiManager::getSsid()
@@ -29,16 +94,16 @@ bool WiFiManager::isConnected()
     return WiFi.status() == WL_CONNECTED;
 }
 
-float WiFiManager::getCurrentPrice(const String& crypto, const String& fiat)
+bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, float& price_out)
 {
     String url = m_request->urlCurrentPrice(crypto, fiat);
-    return m_request->currentPrice(getUrlContent(m_request->getServer(), url));
+    return m_request->currentPrice(getUrlContent(m_request->getServer(), url), price_out);
 }
 
-uint32_t WiFiManager::getCurrentTime()
+bool WiFiManager::getPriceOneDay(const String& crypto, const String& fiat, float& priceAtTime_out)
 {
-    String url = m_request->urlCurrentTime();
-    return m_request->currentTime(getUrlContent(m_request->getServer(), url));
+    String url = m_request->urlPriceAtTime(m_epoch-86400, crypto, fiat);
+    return m_request->priceAtTime(getUrlContent(m_request->getServer(), url), priceAtTime_out);
 }
 
 String WiFiManager::getUrlContent(const String& server, const String& url)
