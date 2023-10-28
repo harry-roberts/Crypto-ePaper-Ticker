@@ -4,7 +4,7 @@
 #include "Utils.h"
 
 #define uS_TO_S_FACTOR 1000000
-#define DEEP_SLEEP_TIME_S  300
+#define DEEP_SLEEP_TIME_S  60
 
 SET_LOOP_TASK_STACK_SIZE(16*1024);
 
@@ -19,13 +19,9 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup() 
 {
-    // temporary battery voltage monitoring
-    String bat(utils::battery_read(), 3);
-    bat.concat("V");
-
     ++bootCount;
-    bat.concat(",");
-    bat.concat(bootCount);
+
+    int batPct = utils::battery_percent(utils::battery_read());
 
     uint32_t startTime = millis();
     Serial.begin(115200);
@@ -41,8 +37,6 @@ void setup()
     do
     {
         price = wm.getCurrentPrice("BTC", "USD");
-        if (price > 0)
-            display.writePriceDisplay(price, "BTC", "$", bat); // need to find a way to add £/€ symbol
         delay(1000);
         retries++;
     }
@@ -50,7 +44,11 @@ void setup()
 
     if (price < 0)
     {
-        display.writePriceDisplay(0, "Error", "", bat); // will need a proper fail screen/message
+        display.writeDisplay("Error", "", 0, 0, 0, 0, "12 Oct", "12:34", batPct); 
+    }
+    else
+    {
+        display.writeDisplay("BTC", "$", price, 0, 0, 0, "12 Oct", "12:34", batPct); // need to find a way to add £/€ symbol
     }
     display.hibernate();
     
