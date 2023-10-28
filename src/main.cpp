@@ -1,6 +1,7 @@
 #include "WiFiManager.h"
 #include "DisplayManager.h"
 #include "Login.h"
+#include "Utils.h"
 
 #define uS_TO_S_FACTOR 1000000
 #define DEEP_SLEEP_TIME_S  300
@@ -9,25 +10,7 @@ SET_LOOP_TASK_STACK_SIZE(16*1024);
 
 RTC_DATA_ATTR int bootCount = 0;
 
-float rawVoltage() {
-    uint16_t reading1 = analogRead(35);
-    delay(10);
-    uint16_t reading2 = analogRead(35);
-    delay(10);
-    uint16_t reading3 = analogRead(35);
 
-    float avg = ((float)reading1 + reading2 + reading3) / 3;
-    float battery_voltage = avg / 4095 * 3.3;
-    return battery_voltage;
-}
-
-double convertVoltage(float volt) {
-  return (100 + 100) / 100  * volt;
-}
-
-double volt_read(){
-  return convertVoltage( rawVoltage());
-}
 
 // The Arduino framework internally defines the main() function, which
 // calls setup() once and loop() on repeat
@@ -37,7 +20,7 @@ double volt_read(){
 void setup() 
 {
     // temporary battery voltage monitoring
-    String bat(volt_read());
+    String bat(utils::battery_read(), 3);
     bat.concat("V");
 
     ++bootCount;
@@ -48,10 +31,6 @@ void setup()
     Serial.begin(115200);
     delay(200);
     Serial.println("Program started");
-
-    esp_sleep_enable_timer_wakeup(DEEP_SLEEP_TIME_S * uS_TO_S_FACTOR);
-
-    Serial.print(millis());
     
     WiFiManager wm(login_ssid, login_password);
     DisplayManager display;
@@ -73,18 +52,15 @@ void setup()
     {
         display.writePriceDisplay(0, "Error", "", bat); // will need a proper fail screen/message
     }
+    display.hibernate();
     
     Serial.println("Starting deep sleep");
-    display.hibernate();
     Serial.print("Program awake time: ");
     Serial.println(millis() - startTime);
     Serial.flush();
-    
-    esp_deep_sleep_start(); 
 
-    // measured deep sleep current at ~255-260uA on 9102 version
-    // version without 9102 chip much higher for some reason, ~700uA
-    // active current quite spiky, 50-150mA
+    // start deep sleep
+    utils::ticker_deep_sleep(DEEP_SLEEP_TIME_S * uS_TO_S_FACTOR);
 }
 
 void loop() {}
