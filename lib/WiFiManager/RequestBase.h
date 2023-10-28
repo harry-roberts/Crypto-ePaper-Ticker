@@ -17,11 +17,10 @@ public:
     // url functions
     virtual String urlCurrentPrice(const String& crypto, const String& fiat) = 0;
     virtual String urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat) = 0;
-    virtual String urlCurrentTime() = 0; // might need an outside function for this, ok for binance, confirm other sources
 
     // data functions
-    virtual float currentPrice(const String& content) = 0;
-    virtual uint32_t currentTime(const String& content) = 0;
+    virtual bool currentPrice(const String& content, float& price_out) = 0;
+    virtual bool priceAtTime(const String& content, float& priceAtTime_out) = 0;
 
     // **Note** unix time between all functions should be consistent as SECONDS
 };
@@ -34,10 +33,9 @@ public:
 
     String urlCurrentPrice(const String& crypto, const String& fiat) override;
     String urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat) override;
-    String urlCurrentTime() override;
 
-    float currentPrice(const String& content) override;
-    uint32_t currentTime(const String& content) override;
+    bool currentPrice(const String& content, float& price_out) override;
+    bool priceAtTime(const String& content, float& priceAtTime_out) override;
 };
 
 #endif

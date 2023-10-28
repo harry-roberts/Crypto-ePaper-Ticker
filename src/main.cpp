@@ -32,23 +32,34 @@ void setup()
     DisplayManager display;
     delay(1000);
 
-    float price = -1;
     int retries = 0;
-    do
+
+    float price;
+    bool hasPrice = false;
+    while(!hasPrice && retries < 5) // in case of failure retry
     {
-        price = wm.getCurrentPrice("BTC", "USD");
+        hasPrice = wm.getCurrentPrice("BTC", "USD", price);
         delay(1000);
         retries++;
     }
-    while(price < 0 && retries < 5); // in case of failure retry
 
-    if (price < 0)
+    float priceOneDay;
+    bool hasPriceOneDay = false;
+    retries = 0;
+    while(!hasPriceOneDay && retries < 1) // in case of failure retry
     {
-        display.writeDisplay("Error", "", 0, 0, 0, 0, "12 Oct", "12:34", batPct); 
+        hasPriceOneDay = wm.getPriceOneDay("BTC", "USD", priceOneDay);
+        delay(1000);
+        retries++;
+    }
+
+    if (!hasPrice || !hasPriceOneDay)
+    {
+        display.writeDisplay("Error", "", 0, 0, 0, 0, wm.getDayMonthStr(), wm.getTimeStr(), batPct); 
     }
     else
     {
-        display.writeDisplay("BTC", "$", price, 0, 0, 0, "12 Oct", "12:34", batPct); // need to find a way to add £/€ symbol
+        display.writeDisplay("BTC", "$", price, priceOneDay, 0, 0, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
     }
     display.hibernate();
     

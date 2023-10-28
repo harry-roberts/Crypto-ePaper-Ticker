@@ -2,6 +2,7 @@
 
 #include <Fonts/FreeSans18pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/Org_01.h>
 
 DisplayManager::DisplayManager() :
@@ -11,8 +12,8 @@ DisplayManager::DisplayManager() :
     m_display.setRotation(1);
 }
 
-void DisplayManager::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float pctOneDay, 
-                                  float pctOneWeek, float pctOneYear, const String& dayMonth, const String& time, 
+void DisplayManager::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
+                                  float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
                                   int batteryPercent)
 {    
     m_display.setFullWindow();
@@ -25,6 +26,8 @@ void DisplayManager::writeDisplay(const String& crypto, const String& fiat, floa
         writeCrypto(crypto);
         writeDateTime(dayMonth, time);
         writeBattery(batteryPercent);
+
+        writePriceOneDay(mainPrice, priceOneDay);
     }
     while (m_display.nextPage());
 }
@@ -64,6 +67,29 @@ void DisplayManager::writeMainPrice(const String& price)
 
     m_display.setCursor(x+m_crypto_box_x2, y+1); // looked better moving down 1 more pixel
     m_display.print(price);
+}
+
+void DisplayManager::writePriceOneDay(float mainPrice, float priceOneDay)
+{
+    m_display.setFont(&FreeMonoBold12pt7b);
+    m_display.setTextColor(GxEPD_BLACK);
+
+    float percentChange = ((mainPrice - priceOneDay) / mainPrice) * 100;
+
+    
+    String oneDayLine = "1d: ";
+    oneDayLine.concat(percentChange >= 0 ? "+" : "-");
+    oneDayLine.concat(percentChange);
+    oneDayLine.concat("%");
+
+    // centre the 1d in this region
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(oneDayLine, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
+    uint16_t y = ((m_max_y - tbh) / 2) - tby;
+
+    m_display.setCursor(x+m_crypto_box_x2, y-5);
+    m_display.print(oneDayLine);
 }
 
 void DisplayManager::writeCrypto(const String& crypto)
