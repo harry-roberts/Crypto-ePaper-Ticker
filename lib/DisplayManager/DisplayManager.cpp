@@ -2,6 +2,7 @@
 
 #include <Fonts/FreeSans18pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/Org_01.h>
 
 DisplayManager::DisplayManager() :
     m_display(GxEPD2_213_BN(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4))
@@ -10,7 +11,9 @@ DisplayManager::DisplayManager() :
     m_display.setRotation(1);
 }
 
-void DisplayManager::writePriceDisplay(float price, const String& crypto, const String& fiat, const String& bat)
+void DisplayManager::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float pctOneDay, 
+                                  float pctOneWeek, float pctOneYear, const String& dayMonth, const String& time, 
+                                  int batteryPercent)
 {    
     m_display.setFullWindow();
     m_display.firstPage();
@@ -18,31 +21,33 @@ void DisplayManager::writePriceDisplay(float price, const String& crypto, const 
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(fiat + formatPriceString(price)); // need to find a way to add £/€ symbol
+        writeMainPrice(fiat + formatPriceString(mainPrice)); // need to find a way to add £/€ symbol
         writeCrypto(crypto);
-
-        // temporary battery voltage monitoring
-        m_display.setFont(&FreeSans18pt7b);
-        m_display.setTextColor(GxEPD_BLACK);
-        m_display.setCursor(30, 110);
-        m_display.print(bat);
+        writeDateTime(dayMonth, time);
+        writeBattery(batteryPercent);
     }
     while (m_display.nextPage());
 }
 
 void DisplayManager::addLines()
 {
-    m_display.writeLine(0,       m_crypto_box_y,
-                        m_max_x, m_crypto_box_y,
+    m_display.writeLine(0,       m_crypto_box_y2,
+                        m_max_x, m_crypto_box_y2,
                         GxEPD_BLACK);
-    m_display.writeLine(m_crypto_box_x,       0,
-                        m_crypto_box_x, m_max_y, 
+    m_display.writeLine(m_crypto_box_x2,       0,
+                        m_crypto_box_x2, m_max_y, 
                         GxEPD_BLACK);
-    m_display.writeLine(0,              77,
-                        m_crypto_box_x, 77,
+    m_display.writeLine(0,               m_date_box_y1,
+                        m_crypto_box_x2, m_date_box_y1,
                         GxEPD_BLACK);
-    m_display.fillRect(0,                           0,
-                       m_crypto_box_x, m_crypto_box_y,
+    m_display.writeLine(m_date_box_x1,   m_date_box_y1,
+                        m_date_box_x1,   m_max_y,
+                        GxEPD_BLACK);
+    m_display.writeLine(0,             m_bat_box_y1+10,
+                        m_date_box_x1, m_bat_box_y1+10,
+                        GxEPD_BLACK);
+    m_display.fillRect(0,                            0,
+                       m_crypto_box_x2, m_crypto_box_y2,
                        GxEPD_BLACK);
 }
 
@@ -54,10 +59,10 @@ void DisplayManager::writeMainPrice(const String& price)
     // centre the price in this region
     int16_t tbx, tby; uint16_t tbw, tbh;
     m_display.getTextBounds(price, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = (((m_max_x-m_crypto_box_x) - tbw) / 2) - tbx;
-    uint16_t y = ((m_crypto_box_y - tbh) / 2) - tby;
+    uint16_t x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
+    uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
 
-    m_display.setCursor(x+m_crypto_box_x, y+1); // looked better moving down 1 more pixel
+    m_display.setCursor(x+m_crypto_box_x2, y+1); // looked better moving down 1 more pixel
     m_display.print(price);
 }
 
@@ -69,11 +74,68 @@ void DisplayManager::writeCrypto(const String& crypto)
     // centre the crypto in this region
     int16_t tbx, tby; uint16_t tbw, tbh;
     m_display.getTextBounds(crypto, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = ((m_crypto_box_x - tbw) / 2) - tbx;
-    uint16_t y = ((m_crypto_box_y - tbh) / 2) - tby;
+    uint16_t x = ((m_crypto_box_x2 - tbw) / 2) - tbx;
+    uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
     
     m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
     m_display.print(crypto);
+}
+
+void DisplayManager::writeDateTime(const String& dayMonth, const String& time)
+{
+    m_display.setFont(&FreeSans9pt7b);
+    m_display.setTextColor(GxEPD_BLACK);
+
+    // centre the day/month in this region
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(dayMonth, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t x = (((m_date_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
+    uint16_t y = (((m_date_box_y2-m_date_box_y1) - tbh) / 2) - tby;
+
+    // but move 10 px higher
+    m_display.setCursor(x+m_date_box_x1, y+m_date_box_y1-9);
+    m_display.print(dayMonth);
+
+    // centre the day/month in this region
+    m_display.getTextBounds(time, 0, 0, &tbx, &tby, &tbw, &tbh);
+    x = (((m_date_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
+    y = (((m_date_box_y2-m_date_box_y1) - tbh) / 2) - tby;
+
+    // and move this 10 px lower
+    m_display.setCursor(x+m_date_box_x1, y+m_date_box_y1+11);
+    m_display.print(time);
+}
+
+void DisplayManager::writeBattery(int batPct)
+{
+    // write number
+    m_display.setFont(&Org_01);
+    m_display.setTextColor(GxEPD_BLACK);
+
+    if (batPct == 100)
+        batPct = 99;
+    
+    int maxHeight = m_max_y - m_bat_box_y1 - 10;
+
+    // centre the battery percent in this region
+    // this gets quite confusing, needs better assignment of regions
+    // it does all line up nicely though
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(String(batPct), 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t x = ((m_bat_box_x2 - tbw) / 2) - tbx;
+    uint16_t y = (((m_bat_box_y1+(m_max_y-maxHeight)) - tbh) / 2) - tby;
+
+    m_display.setCursor(x, y+1);
+    m_display.print(batPct);
+
+    // draw box
+    float drawHeight = (((float)batPct / 100) * maxHeight);
+    int drawHeightInt = (int)(drawHeight+0.5);
+    m_display.fillRect(0,             m_max_y-drawHeightInt,
+                       m_date_box_x1, m_max_y,
+                       GxEPD_BLACK);
+
+
 }
 
 String DisplayManager::formatPriceString(float price)
