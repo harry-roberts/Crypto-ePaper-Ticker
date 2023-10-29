@@ -165,9 +165,6 @@ void DisplayManager::writeBattery(int batPct)
     // write number
     m_display.setFont(&Org_01);
     m_display.setTextColor(GxEPD_BLACK);
-
-    if (batPct == 100)
-        batPct = 99;
     
     int maxHeight = m_max_y - m_bat_box_y1 - 10;
 
@@ -243,6 +240,10 @@ String DisplayManager::formatPriceChangeString(float percentChange, const String
     String changeLine = timeframe + ": ";
     if (percentChange >= 0)
         changeLine.concat("+");
+    else
+        changeLine.concat("-");
+
+    percentChange = abs(percentChange); // work with +ve for rounding, +/- already appended
 
     if (percentChange < 10)
         changeLine.concat(String(percentChange, 2));

@@ -19,6 +19,7 @@ public:
 
     String getDayMonthStr();
     String getTimeStr();
+    time_t getEpoch();
 
     String getSsid();
 

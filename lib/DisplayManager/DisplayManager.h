@@ -6,6 +6,7 @@
 #include <GxEPD2_BW.h>
 
 class DisplayManagerTest_formatPrice_Test;
+class DisplayManagerTest_formatPriceChange_Test;
 
 class DisplayManager
 {
@@ -19,6 +20,7 @@ public:
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
+    friend class ::DisplayManagerTest_formatPriceChange_Test;
 
     void addLines();
     void writeMainPrice(const String& price);

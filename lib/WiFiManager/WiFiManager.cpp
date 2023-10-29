@@ -81,6 +81,11 @@ String WiFiManager::getTimeStr()
     return m_time;
 }
 
+time_t WiFiManager::getEpoch()
+{
+    return m_epoch;
+}
+
 String WiFiManager::getSsid()
 {
     return m_ssid;
