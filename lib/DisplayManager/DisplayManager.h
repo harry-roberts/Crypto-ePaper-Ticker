@@ -19,13 +19,18 @@ public:
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
+
     void addLines();
     void writeMainPrice(const String& price);
     void writeCrypto(const String& price);
     void writeDateTime(const String& dayMonth, const String& time);
     void writeBattery(int batPct);
-    void writePriceOneDay(float mainPrice, float priceOneDay);
+    bool writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset);
+
+    void drawArrow(bool isPositive);
+
     String formatPriceString(float price);
+    String formatPriceChangeString(float priceChange, const String& timeframe);
     void formatCommas(char *buf, int price);
 
     GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> m_display;

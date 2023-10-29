@@ -10,8 +10,6 @@ SET_LOOP_TASK_STACK_SIZE(16*1024);
 
 RTC_DATA_ATTR int bootCount = 0;
 
-
-
 // The Arduino framework internally defines the main() function, which
 // calls setup() once and loop() on repeat
 // Tricky to remove this behaviour, so just treat setup() as this 
@@ -27,6 +25,9 @@ void setup()
     Serial.begin(115200);
     delay(200);
     Serial.println("Program started");
+
+    String crypto = "BTC";
+    String fiat = "USD";
     
     WiFiManager wm(login_ssid, login_password);
     DisplayManager display;
@@ -34,32 +35,50 @@ void setup()
 
     int retries = 0;
 
-    float price;
+    float price, priceOneDay, priceOneMonth, priceOneYear;
     bool hasPrice = false;
     while(!hasPrice && retries < 5) // in case of failure retry
     {
-        hasPrice = wm.getCurrentPrice("BTC", "USD", price);
+        hasPrice = wm.getCurrentPrice(crypto, fiat, price);
         delay(1000);
         retries++;
     }
 
-    float priceOneDay;
     bool hasPriceOneDay = false;
     retries = 0;
-    while(!hasPriceOneDay && retries < 1) // in case of failure retry
+    while(!hasPriceOneDay && retries < 2) // in case of failure retry
     {
-        hasPriceOneDay = wm.getPriceOneDay("BTC", "USD", priceOneDay);
+        hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, 86400, priceOneDay);
         delay(1000);
         retries++;
     }
 
-    if (!hasPrice || !hasPriceOneDay)
+    bool hasPriceOneMonth = false;
+    retries = 0;
+    while(!hasPriceOneMonth && retries < 2) // in case of failure retry
     {
+        hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, 2592000, priceOneMonth);
+        delay(1000);
+        retries++;
+    }
+
+    bool hasPriceOneYear = false;
+    retries = 0;
+    while(!hasPriceOneYear && retries < 2) // in case of failure retry
+    {
+        hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, 31536000, priceOneYear);
+        delay(1000);
+        retries++;
+    }
+
+    if (!hasPrice || !hasPriceOneDay || !hasPriceOneMonth || !hasPriceOneYear)
+    {
+        // will need a proper fail screen/message
         display.writeDisplay("Error", "", 0, 0, 0, 0, wm.getDayMonthStr(), wm.getTimeStr(), batPct); 
     }
     else
     {
-        display.writeDisplay("BTC", "$", price, priceOneDay, 0, 0, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
+        display.writeDisplay(crypto, "$", price, priceOneDay, priceOneMonth, priceOneYear, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
     }
     display.hibernate();
     
