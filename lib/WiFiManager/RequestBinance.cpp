@@ -50,6 +50,12 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
 {
     Serial.println("RequestBinance::priceAtTime: content = " + content);
 
+    if (content == "")
+    {
+        Serial.println("No content, returning");
+        return false;
+    }
+
     // for binance we will use the open price of this kline
     // content e.g:
     // [[1697382420000,"22138.72000000","22138.72000000","22138.72000000","22138.72000000","0.00000000",1697382479999,"0.00000000",0,"0.00000000","0.00000000","0"]]
@@ -59,11 +65,16 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
     int firstComma = content.indexOf(",");
     int secondComma = content.indexOf(",", firstComma+1);
 
-    priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
-    Serial.print("priceAtTime_out = ");
-    Serial.println(priceAtTime_out);
+    if (firstComma > 0 && secondComma > 0)
+    {
+        priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
+        Serial.print("priceAtTime_out = ");
+        Serial.println(priceAtTime_out);
 
-    return true;
+        if (priceAtTime_out > 0)
+            return true;
+    }
+    return false;
 }
 
 #endif

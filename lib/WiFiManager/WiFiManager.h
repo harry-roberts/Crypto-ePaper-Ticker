@@ -15,7 +15,7 @@ public:
     bool isConnected();
 
     bool getCurrentPrice(const String& crypto, const String& fiat, float& price_out);
-    bool getPriceOneDay(const String& crypto, const String& fiat, float& priceAtTime_out);
+    bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out);
 
     String getDayMonthStr();
     String getTimeStr();

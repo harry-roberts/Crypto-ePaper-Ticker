@@ -8,7 +8,7 @@
 DisplayManager::DisplayManager() :
     m_display(GxEPD2_213_BN(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4))
 {
-    m_display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    m_display.init(115200, true, 2, false);
     m_display.setRotation(1);
 }
 
@@ -27,7 +27,10 @@ void DisplayManager::writeDisplay(const String& crypto, const String& fiat, floa
         writeDateTime(dayMonth, time);
         writeBattery(batteryPercent);
 
-        writePriceOneDay(mainPrice, priceOneDay);
+        // could try and split them by thirds but these offsets fit well
+        drawArrow(writePriceChange(mainPrice, priceOneDay, "1d", -6));
+        writePriceChange(mainPrice, priceOneMonth, "1M", 20);
+        writePriceChange(mainPrice, priceOneYear, "1Y", 46);
     }
     while (m_display.nextPage());
 }
@@ -69,27 +72,25 @@ void DisplayManager::writeMainPrice(const String& price)
     m_display.print(price);
 }
 
-void DisplayManager::writePriceOneDay(float mainPrice, float priceOneDay)
+bool DisplayManager::writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset)
 {
     m_display.setFont(&FreeMonoBold12pt7b);
     m_display.setTextColor(GxEPD_BLACK);
 
-    float percentChange = ((mainPrice - priceOneDay) / mainPrice) * 100;
+    float percentChange = ((mainPrice - priceToCompare) / mainPrice) * 100;
 
-    
-    String oneDayLine = "1d: ";
-    oneDayLine.concat(percentChange >= 0 ? "+" : "-");
-    oneDayLine.concat(percentChange);
-    oneDayLine.concat("%");
+    String changeLine = formatPriceChangeString(percentChange, timeframe);
 
-    // centre the 1d in this region
+    // centre the change in this region
     int16_t tbx, tby; uint16_t tbw, tbh;
-    m_display.getTextBounds(oneDayLine, 0, 0, &tbx, &tby, &tbw, &tbh);
+    m_display.getTextBounds(changeLine, 0, 0, &tbx, &tby, &tbw, &tbh);
     uint16_t x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
     uint16_t y = ((m_max_y - tbh) / 2) - tby;
 
-    m_display.setCursor(x+m_crypto_box_x2, y-5);
-    m_display.print(oneDayLine);
+    m_display.setCursor(x+m_crypto_box_x2, y+yOffset);
+    m_display.print(changeLine);
+
+    return percentChange >= 0;
 }
 
 void DisplayManager::writeCrypto(const String& crypto)
@@ -105,6 +106,33 @@ void DisplayManager::writeCrypto(const String& crypto)
     
     m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
     m_display.print(crypto);
+}
+
+void DisplayManager::drawArrow(bool isPositive)
+{
+    // todo define this in the centre of the box
+    if (isPositive)
+    {
+        m_display.fillTriangle(27, 70,
+                               60, 70,
+                               43, 45,
+                               GxEPD_BLACK);
+        m_display.fillTriangle(27, 70,
+                               60, 70,
+                               43, 64,
+                               GxEPD_WHITE);
+    }
+    else
+    {
+        m_display.fillTriangle(27, 45,
+                               60, 45,
+                               43, 70,
+                               GxEPD_BLACK);
+        m_display.fillTriangle(27, 45,
+                               60, 45,
+                               43, 51,
+                               GxEPD_WHITE);
+    }
 }
 
 void DisplayManager::writeDateTime(const String& dayMonth, const String& time)
@@ -202,6 +230,32 @@ void DisplayManager::formatCommas(char *buf, int price) {
     // continue writing a comma and next 3 digits as the recursions come back
     sprintf(buf+strlen(buf), ",%03d", price % 1000);
     return;
+}
+
+String DisplayManager::formatPriceChangeString(float percentChange, const String& timeframe)
+{
+    // for price change we want constant width
+    // e.g. 1d: +1.23%
+    //      1M: +12.3%
+    //      1Y: + 123%
+    //      1d: +1234%
+
+    String changeLine = timeframe + ": ";
+    if (percentChange >= 0)
+        changeLine.concat("+");
+
+    if (percentChange < 10)
+        changeLine.concat(String(percentChange, 2));
+    else if (percentChange < 100)
+        changeLine.concat(String(percentChange, 1));
+    else if (percentChange < 1000)
+        changeLine.concat(" " + String(percentChange, 0));
+    else
+        changeLine.concat(String(percentChange, 0));
+
+    changeLine.concat("%");
+
+    return changeLine;
 }
 
 void DisplayManager::hibernate()

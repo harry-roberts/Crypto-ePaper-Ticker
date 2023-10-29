@@ -36,10 +36,7 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
             if (gotTime)
             {
                 setTimeVars(timeinfo);
-                Serial.print("Time: ");
-                Serial.print(m_dayMonth);
-                Serial.print(" ");
-                Serial.println(m_time);
+                Serial.println("Time: " + m_dayMonth + " " + m_time);
                 Serial.print("Epoch: ");
                 Serial.println(m_epoch);
                 timeRetries++;
@@ -100,9 +97,9 @@ bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, floa
     return m_request->currentPrice(getUrlContent(m_request->getServer(), url), price_out);
 }
 
-bool WiFiManager::getPriceOneDay(const String& crypto, const String& fiat, float& priceAtTime_out)
+bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out)
 {
-    String url = m_request->urlPriceAtTime(m_epoch-86400, crypto, fiat);
+    String url = m_request->urlPriceAtTime(m_epoch-unixOffset, crypto, fiat);
     return m_request->priceAtTime(getUrlContent(m_request->getServer(), url), priceAtTime_out);
 }
 
