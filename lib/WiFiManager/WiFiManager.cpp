@@ -66,9 +66,7 @@ void WiFiManager::setTimeVars(tm& timeinfo)
     strftime(buf2, 20, "%H:%M", &timeinfo);
     m_time = String(buf2);
 
-    time_t now;
-    time(&now);
-    m_epoch = now;
+    time(&m_epoch);
 }
 
 String WiFiManager::getDayMonthStr()
@@ -93,7 +91,7 @@ String WiFiManager::getSsid()
 
 bool WiFiManager::isConnected()
 {
-    return WiFi.status() == WL_CONNECTED;
+    return (WiFi.status() == WL_CONNECTED) && (m_epoch > 0);
 }
 
 bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, float& price_out)

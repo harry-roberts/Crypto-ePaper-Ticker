@@ -27,9 +27,16 @@ float convert_voltage_reading(float volt)
 
 float correct_battery_voltage(float volt)
 {
+    #if TTGO_BOARD_VERSION == 1
     // experimentally found this offset
     // see images/voltage_correction_2.3.1.png
     return ((volt*0.988) + 0.354);
+    #elif TTGO_BOARD_VERSION == 2
+    return ((volt*1.03) + 0.267);
+    #else
+    return volt;
+    #endif
+
 }
 
 float battery_read()
@@ -39,19 +46,16 @@ float battery_read()
 
 int battery_percent(float volt)
 {
-    // max battery = 4.2V
-    // min battery = 3.2V
-    // map given voltage between these two values, below or above capped at min/max
-    const float maxVoltage = 4.2;
-    const float minVoltage = 3.2;
-    // exactly 1 volt difference so really its just the difference above min, but 
-    // calculate in case these values change
+    // map given voltage between these two values, value below or above is capped at min/max
+    const float maxVoltage = 4.15; // supposedly 4.2v but found hard to charge all the way to this
+    const float minVoltage = 3.35; // discharge after 3.3v is quite fast, just call this the min to allow
+                                   // some charge for long hibernate
     float inVolt = volt;
 
-    if (inVolt < 3.2)
-        inVolt = 3.2;
-    if (inVolt > 4.2)
-        inVolt = 4.2;
+    if (inVolt < minVoltage)
+        inVolt = minVoltage;
+    if (inVolt > maxVoltage)
+        inVolt = maxVoltage;
 
     float pct = ( (inVolt - minVoltage) / (maxVoltage - minVoltage) ) * 100;
     return (int)pct;
