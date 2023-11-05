@@ -12,7 +12,7 @@ class WiFiManager
 public:
     WiFiManager(const String& ssid, const String& password);
 
-    bool isConnected();
+    bool isConnected(); // if connected to wifi and made a successful remote connection (have epoch time)
 
     bool getCurrentPrice(const String& crypto, const String& fiat, float& price_out);
     bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out);
