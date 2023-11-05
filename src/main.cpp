@@ -4,11 +4,32 @@
 #include "Utils.h"
 
 #define uS_TO_S_FACTOR 1000000
-#define DEEP_SLEEP_TIME_S  60
+#define DEEP_SLEEP_TIME_S  120
+#define ALERT_TIME_S  300
+
+#define SECONDS_ONE_DAY 86400L
+#define SECONDS_ONE_MONTH 2592000L
+#define SECONDS_ONE_YEAR 31536000L
 
 SET_LOOP_TASK_STACK_SIZE(16*1024);
 
 RTC_DATA_ATTR int bootCount = 0;
+
+hw_timer_t *alert_timer = NULL;
+
+void IRAM_ATTR onTimer()
+{
+    // failsafe to reboot if taking too long
+    // If some wifi request gets stuck it can either take a very long time or never recover.
+    // It would be a bad situation for the device to just be sitting there draining battery.
+    // This timer will get triggered regardless of what the program is doing, and will reboot.
+    // Enable at start, disable after all requests have gone through and screen update starts.
+    Serial.print("[");
+    Serial.print(millis());
+    Serial.println("] Alert triggered, restarting device");
+    ESP.restart();
+    // maybe add some kind of logging to SPIFFS to warn if this is happening too frequently
+}
 
 // The Arduino framework internally defines the main() function, which
 // calls setup() once and loop() on repeat
@@ -17,9 +38,14 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup() 
 {
+    int batPct = utils::battery_percent(utils::battery_read());
     ++bootCount;
 
-    int batPct = utils::battery_percent(utils::battery_read());
+    // timer setup
+    alert_timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(alert_timer, &onTimer, true);
+    timerAlarmWrite(alert_timer, ALERT_TIME_S*uS_TO_S_FACTOR, true);
+    timerAlarmEnable(alert_timer);
 
     uint32_t startTime = millis();
     Serial.begin(115200);
@@ -48,7 +74,7 @@ void setup()
     retries = 0;
     while(!hasPriceOneDay && retries < 2) // in case of failure retry
     {
-        hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, 86400, priceOneDay);
+        hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_DAY, priceOneDay);
         delay(1000);
         retries++;
     }
@@ -57,7 +83,7 @@ void setup()
     retries = 0;
     while(!hasPriceOneMonth && retries < 2) // in case of failure retry
     {
-        hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, 2592000, priceOneMonth);
+        hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_MONTH, priceOneMonth);
         delay(1000);
         retries++;
     }
@@ -66,10 +92,17 @@ void setup()
     retries = 0;
     while(!hasPriceOneYear && retries < 2) // in case of failure retry
     {
-        hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, 31536000, priceOneYear);
+        hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_YEAR, priceOneYear);
         delay(1000);
         retries++;
     }
+
+    // can turn wifi off now - saves some power while updating display
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+
+    // no need for alert timer after wifi is finished
+    timerAlarmDisable(alert_timer);
 
     if (!hasPrice || !hasPriceOneDay || !hasPriceOneMonth || !hasPriceOneYear)
     {
