@@ -30,7 +30,7 @@ String RequestBinance::urlPriceAtTime(uint32_t unix, const String& crypto, const
 
 bool RequestBinance::currentPrice(const String& content, float& price_out)
 {
-    Serial.println("RequestBinance::currentPrice: content = " + content);
+    log_d("content = %s", content.c_str());
     DynamicJsonDocument doc(96); // https://arduinojson.org/v6/assistant/#/step1
     deserializeJson(doc, content);
 
@@ -38,8 +38,8 @@ bool RequestBinance::currentPrice(const String& content, float& price_out)
     {
         String symbol = doc["symbol"];
         String price = doc["price"];
-        Serial.println("symbol: " + symbol + " has price: " + price);
         price_out = price.toFloat();
+        log_d("symbol: %s has price: %f", symbol.c_str(), price_out);
         return true;
     }
 
@@ -48,11 +48,11 @@ bool RequestBinance::currentPrice(const String& content, float& price_out)
 
 bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
 {
-    Serial.println("RequestBinance::priceAtTime: content = " + content);
+    log_d("content = %s", content.c_str());
 
     if (content == "")
     {
-        Serial.println("No content, returning");
+        log_w("No content, returning");
         return false;
     }
 
@@ -68,8 +68,7 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
     if (firstComma > 0 && secondComma > 0)
     {
         priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
-        Serial.print("priceAtTime_out = ");
-        Serial.println(priceAtTime_out);
+        log_d("priceAtTime_out = %f", priceAtTime_out);
 
         if (priceAtTime_out > 0)
             return true;

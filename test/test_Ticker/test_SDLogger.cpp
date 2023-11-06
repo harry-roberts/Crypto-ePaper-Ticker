@@ -23,5 +23,5 @@ TEST_F(SDLoggerTest, init)
     msg += __TIME__;
     msg += "\n";
 
-    EXPECT_TRUE(sd.appendFile("/testfile.txt", msg.c_str()));
+    EXPECT_TRUE(sd.appendFile("/testfile.txt", msg));
 }
