@@ -12,20 +12,35 @@ String RequestBinance::getServer()
 
 String RequestBinance::urlCurrentPrice(const String& crypto, const String& fiat)
 {
-    // Binance prices USD with only USDT
-    String urlFiat = (fiat == "USD") ? "USDT" : fiat;
-    return "https://api.binance.com/api/v3/ticker/price?symbol=" + crypto + urlFiat;
+    String rtn;
+    rtn.reserve(64); // expect it is 58 but allow a few extra in case of longer symbol
+
+    rtn += "https://api.binance.com/api/v3/ticker/price?symbol=";
+    rtn += crypto;
+    rtn += (fiat == "USD") ? "USDT" : fiat; // Binance prices USD with only USDT
+
+    return rtn;
 }
 
 String RequestBinance::urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat)
 {
-    // Binance prices USD with only USDT
-    String urlFiat = (fiat == "USD") ? "USDT" : fiat;
     // binance takes milliseconds as unix time, add zeros
     // can get the price by requesting a 1m kline between the current time and current time+60
     // should return just one bar https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data 
-    return "https://api.binance.com/api/v3/klines?symbol=" + crypto + urlFiat + "&interval=1m&startTime=" + 
-            String(unix) + "000&endTime=" + String(unix+60) + "000&limit=1";
+
+    String rtn;
+    rtn.reserve(124); // expect it is 118 but allow a few extra in case of longer symbol
+
+    rtn += "https://api.binance.com/api/v3/klines?symbol=";
+    rtn += crypto;
+    rtn += (fiat == "USD") ? "USDT" : fiat; // Binance prices USD with only USDT
+    rtn += "&interval=1m&startTime=";
+    rtn += unix;
+    rtn += "000&endTime=";
+    rtn += (unix + 60);
+    rtn += "000&limit=1";
+
+    return rtn;
 }
 
 bool RequestBinance::currentPrice(const String& content, float& price_out)
