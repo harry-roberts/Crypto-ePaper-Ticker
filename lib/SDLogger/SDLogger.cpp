@@ -17,13 +17,13 @@ SDLogger::SDLogger() :
     m_spi.begin(SCK, MISO, MOSI, CS);
     if (!SD.begin(CS,m_spi,80000000)) 
     {
-        Serial.println("Card Mount Failed");
+        log_w("Card Mount Failed");
         return;
     }
 
     if(SD.cardType() == CARD_NONE) 
     {
-        Serial.println("No SD card attached");
+        log_w("No SD card attached");
         return;
     }
 
@@ -34,7 +34,7 @@ bool SDLogger::appendFile(const String& path, const String& message)
 {
     if (!m_initialised)
     {
-        Serial.printf("SD card failed init, cannot append");
+        log_w("SD card failed init, cannot append");
         return false;
     }
 
@@ -43,7 +43,7 @@ bool SDLogger::appendFile(const String& path, const String& message)
     File file = SD.open(path, FILE_APPEND);
     if(!file)
     {
-        Serial.println("SDLogger::appendFile - Failed to open file");
+        log_w("Failed to open file");
         return success;
     }
     if(file.print(message))
@@ -52,7 +52,7 @@ bool SDLogger::appendFile(const String& path, const String& message)
     } 
     else 
     {
-        Serial.println("SDLogger::appendFile - Failed to append");
+        log_w("Failed to append");
     }
 
     file.close();

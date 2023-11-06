@@ -24,9 +24,7 @@ void IRAM_ATTR onTimer()
     // It would be a bad situation for the device to just be sitting there draining battery.
     // This timer will get triggered regardless of what the program is doing, and will reboot.
     // Enable at start, disable after all requests have gone through and screen update starts.
-    Serial.print("[");
-    Serial.print(millis());
-    Serial.println("] Alert triggered, restarting device");
+    log_w("Alert triggered, restarting device");
     ESP.restart();
     // maybe add some kind of logging to SPIFFS to warn if this is happening too frequently
 }
@@ -50,7 +48,7 @@ void setup()
     uint32_t startTime = millis();
     Serial.begin(115200);
     delay(200);
-    Serial.println("Program started");
+    log_i("Program started");
 
     String crypto = "BTC";
     String fiat = "USD";
@@ -115,9 +113,9 @@ void setup()
     }
     display.hibernate();
     
-    Serial.println("Starting deep sleep");
-    Serial.print("Program awake time: ");
-    Serial.println(millis() - startTime);
+    log_i("Starting deep sleep");
+    log_i("Program awake time: %d", millis() - startTime);
+
     Serial.flush();
 
     // start deep sleep

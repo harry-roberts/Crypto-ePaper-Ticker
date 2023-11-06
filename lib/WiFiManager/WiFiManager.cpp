@@ -15,32 +15,31 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
     }
     if (WiFi.status() == WL_CONNECTED)
     {
-        Serial.println("Connected to " + m_ssid);
+        log_i("Connected to %s", m_ssid.c_str());
 
         const char* ntpServer = "pool.ntp.org";
-        Serial.println("Getting time from ntp");
+        log_d("Getting time from ntp");
         configTime(0, 0, ntpServer);
 
         struct tm timeinfo;
 
-        Serial.println("Setting timezone to London");
+        log_d("Setting timezone to London");
         setenv("TZ", "GMT0BST,M3.5.0/1,M10.5.0", 1); // will be in config
         tzset();
 
         bool gotTime = false;
         int timeRetries = 0;
 
-        while (!gotTime && timeRetries < 3)
+        while (!gotTime && timeRetries < 10)
         {
             gotTime = getTime(timeinfo);
             if (gotTime)
             {
                 setTimeVars(timeinfo);
-                Serial.println("Time: " + m_dayMonth + " " + m_time);
-                Serial.print("Epoch: ");
-                Serial.println(m_epoch);
-                timeRetries++;
+                log_d("Time: %s %s", m_dayMonth.c_str(), m_time.c_str());
+                log_d("Epoch: %d", m_epoch);
             }
+            timeRetries++;
             delay(1000);
         }
     }
@@ -50,7 +49,7 @@ bool WiFiManager::getTime(tm& timeinfo)
 {
     if(!getLocalTime(&timeinfo))
     {
-        Serial.println("Failed to obtain time");
+        log_w("Failed to obtain time");
         return false;
     }
     return true;
@@ -113,14 +112,14 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
 
     String content;
 
-    Serial.println("\nStarting connection to server");
+    log_d("Starting connection to server");
     m_client.setInsecure(); //skip verification - binance only accepts https but we don't need it secure
 
     if (!m_client.connect(server.c_str(), 443))
-        Serial.println("Connection failed");
+        log_w("Connection failed");
     else 
     {
-        Serial.println("Connected to server");
+        log_d("Connected to server, sending HTTP request");
         // Make a HTTP request:
         m_client.println("GET " + url + " HTTP/1.0");
         m_client.println("Host: " + server);
@@ -132,7 +131,7 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
             String line = m_client.readStringUntil('\n');
             if (line == "\r") 
             {
-                Serial.println("Headers received");
+                log_d("Headers received");
                 break;
             }
         }
@@ -144,7 +143,7 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
                 char c = m_client.read();
                 content.concat(c);
             }
-            Serial.println("Received content");
+            log_d("Received content");
             return content;
         }
 
