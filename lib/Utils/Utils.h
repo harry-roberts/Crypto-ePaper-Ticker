@@ -16,6 +16,8 @@ int battery_percent(float volt);
 void ticker_hibernate();
 void ticker_deep_sleep(uint64_t time);
 
+bool initSpiffs(bool formatOnFail = true);
+
 }
 
 #endif

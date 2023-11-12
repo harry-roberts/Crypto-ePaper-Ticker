@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+#include "SPIFFS.h"
+
 namespace utils
 {
 
@@ -81,6 +83,18 @@ void ticker_deep_sleep(uint64_t time)
     // normal deep sleep for time period, rtc memory stays active
     esp_sleep_enable_timer_wakeup(time);
     esp_deep_sleep_start(); 
+}
+
+// could go in specific lib
+bool initSpiffs(bool formatOnFail)
+{
+    if (!SPIFFS.begin(formatOnFail))
+    {
+        log_w("An error has occurred while mounting SPIFFS");
+        return false;
+    }
+    log_d("SPIFFS mounted successfully");
+    return true;
 }
 
 }
