@@ -1,11 +1,29 @@
 #include "WiFiManager.h"
 #include <ArduinoJson.h>
+#include "Utils.h"
+
+#include "SPIFFS.h"
+
+// parameters on the served html
+const char* PARAM_INPUT_1 = "ssid";
+const char* PARAM_INPUT_2 = "pass";
+const char* PARAM_INPUT_3 = "crypto";
+const char* PARAM_INPUT_4 = "fiat";
+
+// variables to store values sent
+String ssid;
+String pass;
+String crypto;
+String fiat;
 
 WiFiManager::WiFiManager(const String& ssid, const String& password) :
     m_ssid(ssid),
     m_password(password),
-    m_request(new RequestBinance())
+    m_request(new RequestBinance()),
+    m_server(0), // unused in this mode
+    m_isAccessPoint(false)
 {
+    log_d("Connecting to known WiFi point %s", m_ssid.c_str());
     WiFi.begin(m_ssid, m_password);
     int retries = 0;
     while ((WiFi.status() != WL_CONNECTED) && (retries < 15)) 
@@ -42,6 +60,90 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
             timeRetries++;
             delay(1000);
         }
+    }
+}
+
+WiFiManager::WiFiManager() :
+    m_server(80)
+{
+    log_d("Creating access point for configuration");
+    WiFi.mode(WIFI_AP);
+    m_isAccessPoint = WiFi.softAP("Ticker", NULL);
+    if (!m_isAccessPoint)
+    {
+        log_w("Access point init failed");
+        return;
+    }
+
+    if (utils::initSpiffs())
+    {
+        // Web Server Root URL
+        m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+            request->send(SPIFFS, "/config.html", "text/html");
+        });
+
+        m_server.serveStatic("/", SPIFFS, "/");
+
+        m_server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        int params = request->params();
+        for(int i=0; i<params ;i++)
+        {
+            AsyncWebParameter* p = request->getParam(i);
+            if(p->isPost()){
+                if (p->name() == PARAM_INPUT_1) // ssid value
+                {
+                    ssid = p->value().c_str();
+                    Serial.print("SSID set to: ");
+                    Serial.println(ssid);
+                }
+                if (p->name() == PARAM_INPUT_2) // pass value
+                {
+                    pass = p->value().c_str();
+                    Serial.print("Password set to: ");
+                    Serial.println(pass);
+                }
+                if (p->name() == PARAM_INPUT_3) // crypto value
+                {
+                    crypto = p->value().c_str();
+                    Serial.print("Crypto set to: ");
+                    Serial.println(crypto);
+                }
+                if (p->name() == PARAM_INPUT_4) // fiat value
+                {
+                    fiat = p->value().c_str();
+                    Serial.print("Fiat set to: ");
+                    Serial.println(fiat);
+                }
+            }
+        }
+        // write given data to a json doc
+        StaticJsonDocument<200> doc;
+        doc["s"] = ssid;
+        doc["p"] = pass;
+        doc["c"] = crypto;
+        doc["f"] = fiat;
+
+        File file = SPIFFS.open("/config.json", FILE_WRITE);
+        if (!file)
+        {
+            log_w("failed to open config file for writing");
+            return;
+        }
+
+        if (serializeJson(doc, file) == 0) 
+        {
+            log_w("Failed to write config to file");
+            request->send(200, "text/plain", "An error occurred, the config was not saved. Restarting device");
+        }
+        else
+            request->send(200, "text/plain", "Done. Restarting device");
+    
+        file.close();
+
+        delay(2000);
+        ESP.restart();
+        });
+        m_server.begin();
     }
 }
 
@@ -86,6 +188,17 @@ time_t WiFiManager::getEpoch()
 String WiFiManager::getSsid()
 {
     return m_ssid;
+}
+
+String WiFiManager::getAPIP()
+{
+    if (m_isAccessPoint)
+        return WiFi.softAPIP().toString();
+    else
+    {
+        log_w("Access point init failed, cannot get IP");
+    }
+    return "";
 }
 
 bool WiFiManager::isConnected()
