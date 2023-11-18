@@ -66,12 +66,14 @@ void setup()
     {
         log_d("Creating ap wifi manager");
         WiFiManager wm;
-        log_d("Created ap wifi manager");
+        String msg = "Connect to:\n";
+        msg += wm.getAPIP();
+        display.writeGenericText(msg);
         while(true)
         {
             // to do - solve this
             // if not getting AP IP constantly then it does not serve the page
-            // there must be something that keeps it alive in the background
+            // there must be something that will keep it alive in the background
             log_d("AP IP: %s", wm.getAPIP().c_str());
             delay(1000);
         }

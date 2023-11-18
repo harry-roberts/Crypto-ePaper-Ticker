@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ESP Wi-Fi Manager</title>
+  <title>Ticker Configuration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" type="text/css" href="style.css">
@@ -20,9 +20,22 @@
             <label for="pass">Password</label>
             <input type="text" id ="pass" name="pass"><br>
             <label for="crypto">Crypto</label>
-            <input type="text" id ="crypto" name="crypto"><br>
+            <select name="crypto" id="crypto"> 
+                <option value="ADA">ADA</option>
+                <option value="BNB">BNB</option> 
+                <option value="BTC" selected>BTC</option>
+                <option value="DOGE">DOGE</option> 
+                <option value="ETH">ETH</option> 
+                <option value="LINK">LINK</option>
+                <option value="SOL">SOL</option>
+                <option value="XRP">XRP</option> 
+            </select><br>
             <label for="fiat">Fiat</label>
-            <input type="text" id ="fiat" name="fiat"><br>
+            <select name="fiat" id="fiat"> 
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="USD" selected>USD</option>
+            </select><br>
             <input type ="submit" value ="Submit">
           </p>
         </form>

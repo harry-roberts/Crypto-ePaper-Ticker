@@ -35,6 +35,24 @@ void DisplayManager::writeDisplay(const String& crypto, const String& fiat, floa
     while (m_display.nextPage());
 }
 
+void DisplayManager::writeGenericText(const String& textToWrite)
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.setFont(&FreeSans18pt7b);
+        m_display.setTextColor(GxEPD_BLACK);
+
+        m_display.setCursor(0, 25);
+        m_display.print(textToWrite);
+
+    }
+    while (m_display.nextPage());
+}
+
 void DisplayManager::addLines()
 {
     m_display.writeLine(0,       m_crypto_box_y2,
