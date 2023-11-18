@@ -4,17 +4,10 @@
 
 #include "SPIFFS.h"
 
-// parameters on the served html
-const char* PARAM_INPUT_1 = "ssid";
-const char* PARAM_INPUT_2 = "pass";
-const char* PARAM_INPUT_3 = "crypto";
-const char* PARAM_INPUT_4 = "fiat";
-
-// variables to store values sent
-String ssid;
-String pass;
-String crypto;
-String fiat;
+const char* CONFIG_PARAM_INPUT_SSID = "ssid";
+const char* CONFIG_PARAM_INPUT_PASS = "pass";
+const char* CONFIG_PARAM_INPUT_CRYPTO = "crypto";
+const char* CONFIG_PARAM_INPUT_FIAT = "fiat";
 
 WiFiManager::WiFiManager(const String& ssid, const String& password) :
     m_ssid(ssid),
@@ -78,70 +71,67 @@ WiFiManager::WiFiManager() :
     if (utils::initSpiffs())
     {
         // Web Server Root URL
-        m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
             request->send(SPIFFS, "/config.html", "text/html");
         });
-
         m_server.serveStatic("/", SPIFFS, "/");
-
-        m_server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
-        int params = request->params();
-        for(int i=0; i<params ;i++)
+        m_server.on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
         {
-            AsyncWebParameter* p = request->getParam(i);
-            if(p->isPost()){
-                if (p->name() == PARAM_INPUT_1) // ssid value
+            int params = request->params();
+            StaticJsonDocument<256> doc;
+            for(int i = 0; i < params; i++)
+            {
+                AsyncWebParameter* p = request->getParam(i);
+                if(p->isPost())
                 {
-                    ssid = p->value().c_str();
-                    Serial.print("SSID set to: ");
-                    Serial.println(ssid);
-                }
-                if (p->name() == PARAM_INPUT_2) // pass value
-                {
-                    pass = p->value().c_str();
-                    Serial.print("Password set to: ");
-                    Serial.println(pass);
-                }
-                if (p->name() == PARAM_INPUT_3) // crypto value
-                {
-                    crypto = p->value().c_str();
-                    Serial.print("Crypto set to: ");
-                    Serial.println(crypto);
-                }
-                if (p->name() == PARAM_INPUT_4) // fiat value
-                {
-                    fiat = p->value().c_str();
-                    Serial.print("Fiat set to: ");
-                    Serial.println(fiat);
+                    if (p->name() == CONFIG_PARAM_INPUT_SSID)
+                    {
+                        doc["s"] = p->value().c_str();
+                        log_d("SSID set to: %s", p->value().c_str());
+                    }
+                    if (p->name() == CONFIG_PARAM_INPUT_PASS)
+                    {
+                        doc["p"] = p->value().c_str();
+                        log_d("Password set to: %s", p->value().c_str());
+                    }
+                    if (p->name() == CONFIG_PARAM_INPUT_CRYPTO)
+                    {
+                        doc["c"] = p->value().c_str();
+                        log_d("Crypto set to: %s", p->value().c_str());
+                    }
+                    if (p->name() == CONFIG_PARAM_INPUT_FIAT)
+                    {
+                        doc["f"] = p->value().c_str();
+                        log_d("Fiat set to: %s", p->value().c_str());
+                    }
                 }
             }
-        }
-        // write given data to a json doc
-        StaticJsonDocument<200> doc;
-        doc["s"] = ssid;
-        doc["p"] = pass;
-        doc["c"] = crypto;
-        doc["f"] = fiat;
 
-        File file = SPIFFS.open("/config.json", FILE_WRITE);
-        if (!file)
-        {
-            log_w("failed to open config file for writing");
-            return;
-        }
+            File file = SPIFFS.open("/config.json", FILE_WRITE);
+            if (!file)
+            {
+                log_w("failed to open config file for writing");
+                return;
+            }
 
-        if (serializeJson(doc, file) == 0) 
-        {
-            log_w("Failed to write config to file");
-            request->send(200, "text/plain", "An error occurred, the config was not saved. Restarting device");
-        }
-        else
-            request->send(200, "text/plain", "Done. Restarting device");
-    
-        file.close();
+            if (doc.overflowed()) 
+            {
+                log_w("Json overflowed - some values will be missing");
+                request->send(200, "text/plain", "Error: the config was too large and could not be saved. Restarting device");
+            }
+            else if (serializeJson(doc, file) == 0) 
+            {
+                log_w("Failed to write config to file");
+                request->send(200, "text/plain", "An error occurred, the config was not saved. Restarting device");
+            }
+            else
+                request->send(200, "text/plain", "Done. Restarting device");
+        
+            file.close();
 
-        delay(2000);
-        ESP.restart();
+            delay(2000);
+            ESP.restart();
         });
         m_server.begin();
     }

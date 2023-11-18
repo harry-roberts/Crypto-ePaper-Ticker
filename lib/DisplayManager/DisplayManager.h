@@ -16,6 +16,7 @@ public:
     void writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
                       float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
                       int batteryPercent);
+    void writeGenericText(const String& textToWrite);
     void hibernate();
 
 private:
