@@ -102,8 +102,9 @@ void setup()
         String pass = doc["p"];
         String crypto = doc["c"];
         String fiat = doc["f"];
+        String refreshMins = doc["r"];
 
-        log_d("Using config: ssid = %s, pass = %s, crypto = %s, fiat = %s", ssid, pass, crypto, fiat);
+        log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%d", ssid, pass, crypto, fiat, refreshMins);
 
         file.close();
         
@@ -172,7 +173,8 @@ void setup()
         Serial.flush();
 
         // start deep sleep
-        utils::ticker_deep_sleep(DEEP_SLEEP_TIME_S * uS_TO_S_FACTOR);
+        log_d("Starting deep sleep for %d seconds", refreshMins.toInt() * 60);
+        utils::ticker_deep_sleep(refreshMins.toInt() * 60 * uS_TO_S_FACTOR);
     }
 }
 
