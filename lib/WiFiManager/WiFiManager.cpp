@@ -2,6 +2,8 @@
 #include <ArduinoJson.h>
 #include "Utils.h"
 
+#include <AsyncElegantOTA.h>
+
 #include "SPIFFS.h"
 
 const char* CONFIG_PARAM_INPUT_SSID = "ssid";
@@ -133,6 +135,11 @@ WiFiManager::WiFiManager() :
             delay(2000);
             ESP.restart();
         });
+
+        // this library adds a /update page to the existing web server, which handles an OTA file upload for new firmware (it just works)
+        // ideal solution would be to connect to a remote web server to fetch a file itself, but this works fine for first version
+        AsyncElegantOTA.begin(&m_server);
+
         m_server.begin();
     }
 }
