@@ -10,6 +10,7 @@ const char* CONFIG_PARAM_INPUT_SSID = "ssid";
 const char* CONFIG_PARAM_INPUT_PASS = "pass";
 const char* CONFIG_PARAM_INPUT_CRYPTO = "crypto";
 const char* CONFIG_PARAM_INPUT_FIAT = "fiat";
+const char* CONFIG_PARAM_INPUT_REFRESH = "refresh";
 
 WiFiManager::WiFiManager(const String& ssid, const String& password) :
     m_ssid(ssid),
@@ -106,6 +107,11 @@ WiFiManager::WiFiManager() :
                     {
                         doc["f"] = p->value().c_str();
                         log_d("Fiat set to: %s", p->value().c_str());
+                    }
+                    if (p->name() == CONFIG_PARAM_INPUT_REFRESH)
+                    {
+                        doc["r"] = p->value().c_str();
+                        log_d("Refresh interval set to: %s", p->value().c_str());
                     }
                 }
             }
