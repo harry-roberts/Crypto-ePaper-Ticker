@@ -19,6 +19,9 @@ public:
     void writeGenericText(const String& textToWrite);
     void hibernate();
 
+    void drawCannotConnectToWifi(const String& ssid, const String& password);
+    void drawWifiHasNoInternet();
+
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
     friend class ::DisplayManagerTest_formatPriceChange_Test;

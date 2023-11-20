@@ -15,7 +15,8 @@ public:
     WiFiManager(const String& ssid, const String& password); // for connecting to known network
     WiFiManager(); // for access point
 
-    bool isConnected(); // if connected to wifi and made a successful remote connection (have epoch time)
+    bool isConnected(); // is connected to wifi
+    bool hasInternet(); // have made a successful remote connection (have epoch time)
 
     bool getCurrentPrice(const String& crypto, const String& fiat, float& price_out);
     bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out);
@@ -23,9 +24,12 @@ public:
     String getDayMonthStr();
     String getTimeStr();
     time_t getEpoch();
+    void refreshTime();
 
     String getSsid();
     String getAPIP();
+
+    void disconnect();
 
 private:
     String getUrlContent(const String& server, const String& url);

@@ -1,6 +1,9 @@
 #include "DisplayManager.h"
 
+#include "bitmaps.h"
+
 #include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/Org_01.h>
@@ -281,4 +284,62 @@ void DisplayManager::hibernate()
 {
     delay(1000);
     m_display.hibernate();
+}
+
+void DisplayManager::drawCannotConnectToWifi(const String& ssid, const String& password)
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(3, 5, epd_bitmap_no_wifi, 68, 60, GxEPD_BLACK);
+
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setCursor(75, 30);
+        m_display.print("Couldn't connect");
+        m_display.setCursor(98, 58);
+        m_display.print("to your WiFi");
+
+        m_display.setFont(&FreeSans9pt7b);
+        m_display.setCursor(5, 90);
+        m_display.print("Name: ");
+        m_display.print(ssid);
+        m_display.setCursor(5, 113);
+        m_display.print("Pass: ");
+        m_display.print(password);
+
+    }
+    while (m_display.nextPage());
+}
+
+void DisplayManager::drawWifiHasNoInternet()
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(5, 5, epd_bitmap_wifi_warn, 66, 60, GxEPD_BLACK);
+
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setCursor(90, 25);
+        m_display.print("WiFi couldn't");
+        m_display.setCursor(110, 47);
+        m_display.print("reach the");
+        m_display.setCursor(120, 69);
+        m_display.print("internet");
+
+        m_display.setFont(&FreeSans9pt7b);
+        m_display.setCursor(10, 100);
+        m_display.print("Will retry after configured");
+        m_display.setCursor(10, 117);
+        m_display.print("refresh time");
+
+    }
+    while (m_display.nextPage());
 }
