@@ -7,8 +7,7 @@
 #include <ArduinoJson.h>
 
 #define uS_TO_S_FACTOR 1000000
-#define DEEP_SLEEP_TIME_S  120
-#define ALERT_TIME_S  300
+#define ALERT_TIME_S  150
 
 #define SECONDS_ONE_DAY 86400L
 #define SECONDS_ONE_MONTH 2592000L
@@ -69,15 +68,9 @@ void setup()
         String msg = "Connect to:\n";
         msg += wm.getAPIP();
         display.writeGenericText(msg);
-        while(true)
-        {
-            // to do - solve this
-            // if not getting AP IP constantly then it does not serve the page
-            // there must be something that will keep it alive in the background
-            log_d("AP IP: %s", wm.getAPIP().c_str());
-            delay(1000);
-        }
-        
+
+        // async server alive in background, it will restart device when config received
+        while(true){}
     }
     else
     {
@@ -103,12 +96,33 @@ void setup()
         String crypto = doc["c"];
         String fiat = doc["f"];
         String refreshMins = doc["r"];
+        int refreshSeconds = refreshMins.toInt() * 60;
 
-        log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%d", ssid, pass, crypto, fiat, refreshMins);
+        log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s", ssid, pass, crypto, fiat, refreshMins);
 
         file.close();
         
         WiFiManager wm(ssid, pass);
+
+        if (!wm.isConnected())
+        {
+            log_d("Could not connect to given WiFi");
+            display.drawCannotConnectToWifi("ssid text", "password text");
+
+            log_d("Starting deep sleep for %d seconds", refreshSeconds);
+            utils::ticker_deep_sleep(refreshSeconds * uS_TO_S_FACTOR);
+        }
+
+        if (!wm.hasInternet())
+        {
+            // can't get any prices if we don't have internet
+            log_d("WiFi couldn't make internet connection");
+            display.drawWifiHasNoInternet();
+
+            log_d("Starting deep sleep for %d seconds", refreshSeconds);
+            utils::ticker_deep_sleep(refreshSeconds * uS_TO_S_FACTOR);
+        }
+
         delay(1000);
 
         int retries = 0;
@@ -150,8 +164,10 @@ void setup()
         }
 
         // can turn wifi off now - saves some power while updating display
-        WiFi.disconnect(true);
-        WiFi.mode(WIFI_OFF);
+        wm.disconnect();
+
+        // requests may have taken some time, refresh so display will show time at point of update
+        wm.refreshTime(); 
 
         // no need for alert timer after wifi is finished
         timerAlarmDisable(alert_timer);
@@ -173,8 +189,8 @@ void setup()
         Serial.flush();
 
         // start deep sleep
-        log_d("Starting deep sleep for %d seconds", refreshMins.toInt() * 60);
-        utils::ticker_deep_sleep(refreshMins.toInt() * 60 * uS_TO_S_FACTOR);
+        log_d("Starting deep sleep for %d seconds", refreshSeconds);
+        utils::ticker_deep_sleep(refreshSeconds * uS_TO_S_FACTOR);
     }
 }
 

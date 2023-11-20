@@ -150,6 +150,12 @@ WiFiManager::WiFiManager() :
     }
 }
 
+void WiFiManager::disconnect()
+{
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+}
+
 bool WiFiManager::getTime(tm& timeinfo)
 {
     if(!getLocalTime(&timeinfo))
@@ -171,6 +177,19 @@ void WiFiManager::setTimeVars(tm& timeinfo)
     m_time = String(buf2);
 
     time(&m_epoch);
+}
+
+void WiFiManager::refreshTime()
+{
+    log_d("Refreshing stored time");
+    struct tm timeinfo;
+
+    if (getTime(timeinfo))
+    {
+        setTimeVars(timeinfo);
+        log_d("Time: %s %s", m_dayMonth.c_str(), m_time.c_str());
+        log_d("Epoch: %d", m_epoch);
+    }
 }
 
 String WiFiManager::getDayMonthStr()
@@ -206,7 +225,14 @@ String WiFiManager::getAPIP()
 
 bool WiFiManager::isConnected()
 {
-    return (WiFi.status() == WL_CONNECTED) && (m_epoch > 0);
+    return (WiFi.status() == WL_CONNECTED);
+}
+
+bool WiFiManager::hasInternet()
+{
+    // we can be confident the NTP pool server will not be down
+    // if we have an epoch time, we have an internet connection
+    return m_epoch > 0;
 }
 
 bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, float& price_out)
@@ -223,7 +249,7 @@ bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_
 
 String WiFiManager::getUrlContent(const String& server, const String& url)
 {
-    if (!isConnected())
+    if (!isConnected() || !hasInternet())
         return "";
 
     String content;
