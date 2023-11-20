@@ -107,7 +107,7 @@ void setup()
         if (!wm.isConnected())
         {
             log_d("Could not connect to given WiFi");
-            display.drawCannotConnectToWifi("ssid text", "password text");
+            display.drawCannotConnectToWifi(ssid, pass);
 
             log_d("Starting deep sleep for %d seconds", refreshSeconds);
             utils::ticker_deep_sleep(refreshSeconds * uS_TO_S_FACTOR);
