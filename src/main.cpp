@@ -179,7 +179,7 @@ void setup()
         }
         else
         {
-            display.writeDisplay(crypto, "$", price, priceOneDay, priceOneMonth, priceOneYear, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
+            display.writeDisplay(crypto, fiat, price, priceOneDay, priceOneMonth, priceOneYear, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
         }
         display.hibernate();
         

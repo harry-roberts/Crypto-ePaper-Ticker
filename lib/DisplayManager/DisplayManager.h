@@ -2,6 +2,7 @@
 #define DISPLAYMANAGER_H
 
 #include <Arduino.h>
+#include <map>
 
 #include <GxEPD2_BW.h>
 
@@ -21,6 +22,7 @@ public:
 
     void drawCannotConnectToWifi(const String& ssid, const String& password);
     void drawWifiHasNoInternet();
+    void drawLowBattery();
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
@@ -58,6 +60,10 @@ private:
     const int m_bat_box_y1 = 77;
     const int m_bat_box_x2 = m_date_box_x1;
     const int m_bat_box_y2 = m_max_y;
+
+    std::map<String, char> m_fiatSymbols = {{"GBP", '#'},
+                                            {"USD", '$'},
+                                            {"EUR", '&'}}; // as edited in original font
 
 };
 

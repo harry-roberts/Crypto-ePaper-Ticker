@@ -2,7 +2,7 @@
 
 #include "bitmaps.h"
 
-#include <Fonts/FreeSans18pt7b.h>
+#include <FreeSans18pt7b_edit.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -25,7 +25,7 @@ void DisplayManager::writeDisplay(const String& crypto, const String& fiat, floa
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(fiat + formatPriceString(mainPrice)); // need to find a way to add £/€ symbol
+        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(mainPrice)); // need to find a way to add £/€ symbol
         writeCrypto(crypto);
         writeDateTime(dayMonth, time);
         writeBattery(batteryPercent);
@@ -49,7 +49,7 @@ void DisplayManager::writeGenericText(const String& textToWrite)
         m_display.setFont(&FreeSans18pt7b);
         m_display.setTextColor(GxEPD_BLACK);
 
-        m_display.setCursor(0, 25);
+        m_display.setCursor(2, 30);
         m_display.print(textToWrite);
 
     }
@@ -339,6 +339,31 @@ void DisplayManager::drawWifiHasNoInternet()
         m_display.print("Will retry after configured");
         m_display.setCursor(10, 117);
         m_display.print("refresh time");
+
+    }
+    while (m_display.nextPage());
+}
+
+void DisplayManager::drawLowBattery()
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(10, 10, epd_bitmap_low_battery, 104, 60, GxEPD_BLACK);
+
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setFont(&FreeSans18pt7b);
+        m_display.setCursor(130, 30);
+        m_display.print("Battery");
+        m_display.setCursor(155, 65);
+        m_display.print("low");
+
+        m_display.setFont(&FreeSans9pt7b);
+        m_display.setCursor(40, 110);
+        m_display.print("Please charge device");
 
     }
     while (m_display.nextPage());
