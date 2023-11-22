@@ -368,3 +368,31 @@ void DisplayManager::drawLowBattery()
     }
     while (m_display.nextPage());
 }
+
+void DisplayManager::drawYesWifiNoCrypto(const String& dayMonth, const String& time)
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(16, 5, epd_bitmap_yes_wifi_no_crypto, 212, 60, GxEPD_BLACK);
+
+        m_display.setFont(&FreeSans9pt7b);
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setCursor(5, 80);
+        m_display.print("There was an error connecting");
+        m_display.setCursor(5, 95);
+        m_display.print("to the data source. Will retry...");
+        m_display.setCursor(5, 115);
+        m_display.print("(Last attempt @ ");
+        m_display.print(dayMonth);
+        m_display.print(" ");
+        m_display.print(time);
+        m_display.print(")");
+
+    }
+    while (m_display.nextPage());
+
+}
