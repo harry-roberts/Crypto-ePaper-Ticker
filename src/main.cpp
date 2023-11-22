@@ -165,21 +165,27 @@ void setup()
 
         // can turn wifi off now - saves some power while updating display
         wm.disconnect();
+        // no need for alert timer after wifi is finished
+        timerAlarmDisable(alert_timer);
 
         // requests may have taken some time, refresh so display will show time at point of update
         wm.refreshTime(); 
 
-        // no need for alert timer after wifi is finished
-        timerAlarmDisable(alert_timer);
-
         if (!hasPrice || !hasPriceOneDay || !hasPriceOneMonth || !hasPriceOneYear)
         {
-            // will need a proper fail screen/message
-            display.writeDisplay("Error", "", 0, 0, 0, 0, wm.getDayMonthStr(), wm.getTimeStr(), batPct); 
+            // if we do have main price could just write that with a smaller error message below it
+            log_d("Could not get all price data");
+            log_d("hasPrice=%d, hasPriceOneDay=%d, hasPriceOneMonth=%d, hasPriceOneYear=%d", 
+                  hasPrice, hasPriceOneDay, hasPriceOneMonth, hasPriceOneYear);
+            display.drawYesWifiNoCrypto(wm.getDayMonthStr(), wm.getTimeStr());
+            
+            // start deep sleep for 5 mins - we had internet so was likely just a blip
+            log_d("Starting deep sleep for %d seconds", refreshSeconds);
+            utils::ticker_deep_sleep(300 * uS_TO_S_FACTOR);
         }
         else
         {
-            display.writeDisplay(crypto, fiat, price, priceOneDay, priceOneMonth, priceOneYear, wm.getDayMonthStr(), wm.getTimeStr(), batPct); // need to find a way to add £/€ symbol
+            display.writeDisplay(crypto, fiat, price, priceOneDay, priceOneMonth, priceOneYear, wm.getDayMonthStr(), wm.getTimeStr(), batPct);
         }
         display.hibernate();
         

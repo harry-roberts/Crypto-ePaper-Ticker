@@ -23,6 +23,7 @@ public:
     void drawCannotConnectToWifi(const String& ssid, const String& password);
     void drawWifiHasNoInternet();
     void drawLowBattery();
+    void drawYesWifiNoCrypto(const String& dayMonth, const String& time);
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;
