@@ -143,7 +143,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneDay && retries < 2) // in case of failure retry
         {
-            hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, SecondsOneDay, priceOneDay);
+            hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, constants::SecondsOneDay, priceOneDay);
             delay(1000);
             retries++;
         }
@@ -152,7 +152,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneMonth && retries < 2) // in case of failure retry
         {
-            hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, SecondsOneMonth, priceOneMonth);
+            hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, constants::SecondsOneMonth, priceOneMonth);
             delay(1000);
             retries++;
         }
@@ -161,7 +161,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneYear && retries < 2) // in case of failure retry
         {
-            hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, SecondsOneYear, priceOneYear);
+            hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, constants::SecondsOneYear, priceOneYear);
             delay(1000);
             retries++;
         }

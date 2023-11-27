@@ -46,7 +46,7 @@ String RequestCoinGecko::urlCurrentPrice(const String& crypto, const String& fia
 String RequestCoinGecko::urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat)
 {
     // /coins/{id}/market_chart/range
-    // https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=gbp&from=1701020886&to=1701021186
+    // https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=gbp&from=1701021297&to=1701021597&precision=4
     // granularity is based on time offset:
     //     1 day from current time = 5 minute interval data
     //     2 - 90 days of date range = hourly data
@@ -60,20 +60,20 @@ String RequestCoinGecko::urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffse
 
     switch (unixOffset)
     {
-        case SecondsOneDay:
+        case constants::SecondsOneDay:
             endTime = startTime + 300 + 300;
             break;
-        case SecondsOneMonth:
+        case constants::SecondsOneMonth:
             endTime = startTime + 3600 + 300;
             break;
-        case SecondsOneYear:
+        case constants::SecondsOneYear:
         default:
             endTime = startTime + 3600 + 300; // seems that it actually gives data hourly even at 1 year despite info above
             break;
     }
 
     String rtn;
-    rtn.reserve(120); // expect it is 111 but allow a few extra in case of longer symbol
+    rtn.reserve(128); // expect it is ~123 but allow a few extra in case of longer symbol
 
     rtn += "https://api.coingecko.com/api/v3/coins/";
     rtn += coinGeckoSymbolToId[crypto];
@@ -83,6 +83,7 @@ String RequestCoinGecko::urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffse
     rtn += startTime;
     rtn += "&to=";
     rtn += endTime;
+    rtn += "&precision=4";
 
     return rtn;
 }
