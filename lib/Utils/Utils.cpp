@@ -1,6 +1,7 @@
 #include "Utils.h"
 
 #include "SPIFFS.h"
+#include "Constants.h"
 
 namespace utils
 {
@@ -48,18 +49,16 @@ float battery_read()
 
 int battery_percent(float volt)
 {
-    // map given voltage between these two values, value below or above is capped at min/max
-    const float maxVoltage = 4.15; // supposedly 4.2v but found hard to charge all the way to this
-    const float minVoltage = 3.4; // discharge after 3.3v is quite fast, just call this the min to allow
-                                   // some charge for long hibernate
+    using constants::BatteryMinVoltage;
+    using constants::BatteryMaxVoltage;
     float inVolt = volt;
 
-    if (inVolt < minVoltage)
-        inVolt = minVoltage;
-    if (inVolt > maxVoltage)
-        inVolt = maxVoltage;
+    if (inVolt < BatteryMinVoltage)
+        inVolt = BatteryMinVoltage;
+    if (inVolt > BatteryMaxVoltage)
+        inVolt = BatteryMaxVoltage;
 
-    float pct = ( (inVolt - minVoltage) / (maxVoltage - minVoltage) ) * 100;
+    float pct = ( (inVolt - BatteryMinVoltage) / (BatteryMaxVoltage - BatteryMinVoltage) ) * 100;
     return (int)pct;
 }
 

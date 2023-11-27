@@ -14,7 +14,7 @@ protected:
 
 };
 
-TEST_F(SDLoggerTest, init)
+TEST_F(SDLoggerTest, DISABLED_init) // disabled as don't normally have an sd card connected
 {
     SDLogger sd;
 
