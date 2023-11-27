@@ -22,12 +22,13 @@ String RequestBinance::urlCurrentPrice(const String& crypto, const String& fiat)
     return rtn;
 }
 
-String RequestBinance::urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat)
+String RequestBinance::urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat)
 {
     // binance takes milliseconds as unix time, add zeros
     // can get the price by requesting a 1m kline between the current time and current time+60
     // should return just one bar https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data 
 
+    uint32_t startTime = currentUnix - unixOffset;
     String rtn;
     rtn.reserve(124); // expect it is 118 but allow a few extra in case of longer symbol
 
@@ -35,15 +36,15 @@ String RequestBinance::urlPriceAtTime(uint32_t unix, const String& crypto, const
     rtn += crypto;
     rtn += (fiat == "USD") ? "USDT" : fiat; // Binance prices USD with only USDT
     rtn += "&interval=1m&startTime=";
-    rtn += unix;
+    rtn += startTime;
     rtn += "000&endTime=";
-    rtn += (unix + 60);
+    rtn += (startTime + 60);
     rtn += "000&limit=1";
 
     return rtn;
 }
 
-bool RequestBinance::currentPrice(const String& content, float& price_out)
+bool RequestBinance::currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out)
 {
     log_d("content = %s", content.c_str());
     DynamicJsonDocument doc(96); // https://arduinojson.org/v6/assistant/#/step1
