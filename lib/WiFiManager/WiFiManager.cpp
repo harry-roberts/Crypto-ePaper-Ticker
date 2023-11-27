@@ -15,7 +15,7 @@ const char* CONFIG_PARAM_INPUT_REFRESH = "refresh";
 WiFiManager::WiFiManager(const String& ssid, const String& password) :
     m_ssid(ssid),
     m_password(password),
-    m_request(new RequestBinance()),
+    m_request(new RequestCoinGecko()),
     m_server(0), // unused in this mode
     m_isAccessPoint(false)
 {
@@ -238,12 +238,12 @@ bool WiFiManager::hasInternet()
 bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, float& price_out)
 {
     String url = m_request->urlCurrentPrice(crypto, fiat);
-    return m_request->currentPrice(getUrlContent(m_request->getServer(), url), price_out);
+    return m_request->currentPrice(getUrlContent(m_request->getServer(), url), crypto, fiat, price_out);
 }
 
 bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out)
 {
-    String url = m_request->urlPriceAtTime(m_epoch-unixOffset, crypto, fiat);
+    String url = m_request->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
     return m_request->priceAtTime(getUrlContent(m_request->getServer(), url), priceAtTime_out);
 }
 
@@ -254,7 +254,7 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
 
     String content;
 
-    log_d("Starting connection to server");
+    log_d("Starting connection to server with url %s", url.c_str());
     m_client.setInsecure(); //skip verification - binance only accepts https but we don't need it secure
 
     if (!m_client.connect(server.c_str(), 443))

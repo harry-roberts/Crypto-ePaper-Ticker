@@ -16,10 +16,10 @@ public:
 
     // url functions
     virtual String urlCurrentPrice(const String& crypto, const String& fiat) = 0;
-    virtual String urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat) = 0;
+    virtual String urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat) = 0;
 
     // data functions
-    virtual bool currentPrice(const String& content, float& price_out) = 0;
+    virtual bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) = 0;
     virtual bool priceAtTime(const String& content, float& priceAtTime_out) = 0;
 
     // **Note** unix time between all functions should be consistent as SECONDS
@@ -32,9 +32,22 @@ public:
     String getServer() override;
 
     String urlCurrentPrice(const String& crypto, const String& fiat) override;
-    String urlPriceAtTime(uint32_t unix, const String& crypto, const String& fiat) override;
+    String urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat) override;
 
-    bool currentPrice(const String& content, float& price_out) override;
+    bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
+    bool priceAtTime(const String& content, float& priceAtTime_out) override;
+};
+
+class RequestCoinGecko : public RequestBase
+{
+public:
+    // defines functions as needed for the CoinGecko API
+    String getServer() override;
+
+    String urlCurrentPrice(const String& crypto, const String& fiat) override;
+    String urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat) override;
+
+    bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
     bool priceAtTime(const String& content, float& priceAtTime_out) override;
 };
 

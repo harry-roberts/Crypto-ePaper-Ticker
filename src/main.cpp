@@ -2,16 +2,13 @@
 #include "DisplayManager.h"
 #include "Login.h"
 #include "Utils.h"
+#include "Constants.h"
 
 #include "SPIFFS.h"
 #include <ArduinoJson.h>
 
 #define uS_TO_S_FACTOR 1000000
 #define ALERT_TIME_S  150
-
-#define SECONDS_ONE_DAY 86400L
-#define SECONDS_ONE_MONTH 2592000L
-#define SECONDS_ONE_YEAR 31536000L
 
 #define BUTTON_PIN 39
 
@@ -44,6 +41,14 @@ void setup()
     int batPct = utils::battery_percent(utils::battery_read());
     ++bootCount;
 
+    DisplayManager display;
+
+    if (batPct < 10)
+    {
+        display.drawLowBattery();
+        utils::ticker_hibernate();
+    }
+
     // timer setup
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true);
@@ -58,8 +63,6 @@ void setup()
     pinMode(BUTTON_PIN, INPUT); // high = not pressed, low = pressed
     bool shouldEnterConfig = !digitalRead(BUTTON_PIN);
     log_d("should enter config = %d", shouldEnterConfig);
-
-    DisplayManager display;
 
     if (shouldEnterConfig)
     {
@@ -140,7 +143,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneDay && retries < 2) // in case of failure retry
         {
-            hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_DAY, priceOneDay);
+            hasPriceOneDay = wm.getPriceAtTime(crypto, fiat, SecondsOneDay, priceOneDay);
             delay(1000);
             retries++;
         }
@@ -149,7 +152,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneMonth && retries < 2) // in case of failure retry
         {
-            hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_MONTH, priceOneMonth);
+            hasPriceOneMonth = wm.getPriceAtTime(crypto, fiat, SecondsOneMonth, priceOneMonth);
             delay(1000);
             retries++;
         }
@@ -158,7 +161,7 @@ void setup()
         retries = 0;
         while(!hasPriceOneYear && retries < 2) // in case of failure retry
         {
-            hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, SECONDS_ONE_YEAR, priceOneYear);
+            hasPriceOneYear = wm.getPriceAtTime(crypto, fiat, SecondsOneYear, priceOneYear);
             delay(1000);
             retries++;
         }
