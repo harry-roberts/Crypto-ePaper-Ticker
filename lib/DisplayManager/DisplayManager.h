@@ -12,7 +12,7 @@ class DisplayManagerTest_formatPriceChange_Test;
 class DisplayManager
 {
 public:
-    DisplayManager();
+    DisplayManager(uint8_t rotation = 1);
 
     void writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
                       float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 

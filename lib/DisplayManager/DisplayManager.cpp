@@ -8,11 +8,11 @@
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/Org_01.h>
 
-DisplayManager::DisplayManager() :
+DisplayManager::DisplayManager(uint8_t rotation) :
     m_display(GxEPD2_213_BN(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4))
 {
     m_display.init(115200, true, 2, false);
-    m_display.setRotation(1);
+    m_display.setRotation(rotation);
 }
 
 void DisplayManager::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 

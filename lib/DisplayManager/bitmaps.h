@@ -1,3 +1,6 @@
+#ifndef DISPLAYMANAGER_BITMAPS_H
+#define DISPLAYMANAGER_BITMAPS_H
+
 #include <Arduino.h>
 
 // various small bitmap images for info/error screens, converted into byte arrays to be drawn with 
@@ -237,3 +240,5 @@ const unsigned char epd_bitmap_yes_wifi_no_crypto [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0xf0, 0xfc, 0x7e, 0x1f, 0x87, 0xe3, 0xf0, 
 	0x00, 0x0f, 0xc0, 0x00
 };
+
+#endif

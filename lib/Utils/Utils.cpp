@@ -50,7 +50,7 @@ int battery_percent(float volt)
 {
     // map given voltage between these two values, value below or above is capped at min/max
     const float maxVoltage = 4.15; // supposedly 4.2v but found hard to charge all the way to this
-    const float minVoltage = 3.35; // discharge after 3.3v is quite fast, just call this the min to allow
+    const float minVoltage = 3.4; // discharge after 3.3v is quite fast, just call this the min to allow
                                    // some charge for long hibernate
     float inVolt = volt;
 
