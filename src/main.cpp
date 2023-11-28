@@ -49,16 +49,19 @@ void setup()
         utils::ticker_hibernate();
     }
 
+    uint32_t startTime = millis();
+    Serial.begin(115200);
+    delay(200);
+    auto wakeup_reason = esp_sleep_get_wakeup_cause();
+
+    log_i("Program started");
+    log_d("ESP wakeup reason = %d", wakeup_reason);
+
     // timer setup
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true);
     timerAlarmWrite(alert_timer, ALERT_TIME_S*uS_TO_S_FACTOR, true);
-    timerAlarmEnable(alert_timer);
-
-    uint32_t startTime = millis();
-    Serial.begin(115200);
-    delay(200);
-    log_i("Program started");
+    timerAlarmEnable(alert_timer); 
 
     pinMode(BUTTON_PIN, INPUT); // high = not pressed, low = pressed
     bool shouldEnterConfig = !digitalRead(BUTTON_PIN);
@@ -104,6 +107,10 @@ void setup()
         log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s", ssid, pass, crypto, fiat, refreshMins);
 
         file.close();
+
+        // don't write the config if it is part of an expected deep sleep timer wakeup
+        if (wakeup_reason != ESP_SLEEP_WAKEUP_TIMER)
+            display.drawConfig(ssid, pass, crypto, fiat, refreshMins.toInt());
         
         WiFiManager wm(ssid, pass);
 
