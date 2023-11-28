@@ -26,7 +26,7 @@ void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, 
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(mainPrice)); // need to find a way to add £/€ symbol
+        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(mainPrice));
         writeCrypto(crypto);
         writeDateTime(dayMonth, time);
         writeBattery(batteryPercent);
@@ -90,6 +90,7 @@ void DisplayManagerImpl::drawCannotConnectToWifi(const String& ssid, const Strin
     }
     while (m_display.nextPage());
 }
+
 void DisplayManagerImpl::drawWifiHasNoInternet()
 {
     m_display.setFullWindow();
@@ -118,6 +119,7 @@ void DisplayManagerImpl::drawWifiHasNoInternet()
     }
     while (m_display.nextPage());
 }
+
 void DisplayManagerImpl::drawLowBattery()
 {
     m_display.setFullWindow();
@@ -142,6 +144,7 @@ void DisplayManagerImpl::drawLowBattery()
     }
     while (m_display.nextPage());
 }
+
 void DisplayManagerImpl::drawYesWifiNoCrypto(const String& dayMonth, const String& time)
 {
     m_display.setFullWindow();
@@ -169,6 +172,54 @@ void DisplayManagerImpl::drawYesWifiNoCrypto(const String& dayMonth, const Strin
     while (m_display.nextPage());
 }
 
+void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
+                                    int refreshInterval)
+{
+    const String topMsg = "Starting Ticker...";
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setTextColor(GxEPD_BLACK);
+
+        // centre the top message in this region
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        m_display.getTextBounds(topMsg, 0, 0, &tbx, &tby, &tbw, &tbh);
+        uint16_t x = ((m_max_x - tbw) / 2) - tbx;
+        //uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
+
+        m_display.setCursor(x, 25); // looked better moving down 1 more pixel
+        m_display.print(topMsg);
+
+        m_display.writeLine(0,       32,
+                            m_max_x, 32,
+                            GxEPD_BLACK);
+
+        m_display.setFont(&FreeSans9pt7b);
+        m_display.setCursor(5, 51);
+        m_display.print("Wifi: ");
+        m_display.print(ssid);
+        m_display.setCursor(5, 72);
+        m_display.print("Pass: ");
+        m_display.print(password);
+        m_display.setCursor(5, 93);
+        m_display.print("Crypto: ");
+        m_display.print(crypto);
+        m_display.print(", Fiat: ");
+        m_display.print(fiat);
+        m_display.setCursor(5, 114);
+        m_display.print("Refresh Interval: ");
+        m_display.print(refreshInterval);
+        m_display.print(" mins");
+
+    }
+    while (m_display.nextPage());
+    
+}
+
 void DisplayManagerImpl::addLines()
 {
     m_display.writeLine(0,       m_crypto_box_y2,
@@ -190,6 +241,7 @@ void DisplayManagerImpl::addLines()
                     m_crypto_box_x2, m_crypto_box_y2,
                     GxEPD_BLACK);
 }
+
 void DisplayManagerImpl::writeMainPrice(const String& price)
 {
     m_display.setFont(&FreeSans18pt7b);
@@ -204,6 +256,7 @@ void DisplayManagerImpl::writeMainPrice(const String& price)
     m_display.setCursor(x+m_crypto_box_x2, y+1); // looked better moving down 1 more pixel
     m_display.print(price);
 }
+
 void DisplayManagerImpl::writeCrypto(const String& crypto)
 {
     m_display.setFont(&FreeSans18pt7b);
@@ -218,6 +271,7 @@ void DisplayManagerImpl::writeCrypto(const String& crypto)
     m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
     m_display.print(crypto);
 }
+
 void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& time)
 {
     m_display.setFont(&FreeSans9pt7b);
@@ -242,6 +296,7 @@ void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& tim
     m_display.setCursor(x+m_date_box_x1, y+m_date_box_y1+11);
     m_display.print(time);
 }
+
 void DisplayManagerImpl::writeBattery(int batPct)
 {
     // write number
@@ -268,6 +323,7 @@ void DisplayManagerImpl::writeBattery(int batPct)
                     m_date_box_x1, m_max_y,
                     GxEPD_BLACK);
 }
+
 bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset)
 {
     m_display.setFont(&FreeMonoBold12pt7b);
@@ -343,6 +399,7 @@ String DisplayManagerImpl::formatPriceString(float price)
 
     return formattedPrice;
 }
+
 String DisplayManagerImpl::formatPriceChangeString(float percentChange, const String& timeframe)
 {
     // for price change we want constant width
@@ -372,6 +429,7 @@ String DisplayManagerImpl::formatPriceChangeString(float percentChange, const St
 
     return changeLine;
 }
+
 void DisplayManagerImpl::formatCommas(char *buf, int price)
 {
     // recursively call dividing by 1000 until we get here to write the first digit(s) before first comma

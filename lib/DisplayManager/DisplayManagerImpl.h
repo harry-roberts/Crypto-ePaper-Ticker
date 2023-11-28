@@ -25,6 +25,8 @@ public:
     void drawWifiHasNoInternet();
     void drawLowBattery();
     void drawYesWifiNoCrypto(const String& dayMonth, const String& time);
+    void drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
+                    int refreshInterval);
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;

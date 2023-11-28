@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <memory>
 
-#include "DisplayManagerImpl.h"
+class DisplayManagerImpl;
 
 class DisplayManager
 {
@@ -22,6 +22,8 @@ public:
     void drawWifiHasNoInternet();
     void drawLowBattery();
     void drawYesWifiNoCrypto(const String& dayMonth, const String& time);
+    void drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
+                    int refreshInterval);
 
 private:
     std::unique_ptr<DisplayManagerImpl> m_impl;

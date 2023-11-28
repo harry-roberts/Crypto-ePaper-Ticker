@@ -1,4 +1,5 @@
 #include "DisplayManager.h"
+#include "DisplayManagerImpl.h"
 
 DisplayManager::DisplayManager() :
     m_impl(new DisplayManagerImpl())
@@ -43,4 +44,10 @@ void DisplayManager::drawLowBattery()
 void DisplayManager::drawYesWifiNoCrypto(const String& dayMonth, const String& time)
 {
     m_impl->drawYesWifiNoCrypto(dayMonth, time);
+}
+
+void DisplayManager::drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
+                                int refreshInterval)
+{
+    m_impl->drawConfig(ssid, password, crypto, fiat, refreshInterval);
 }
