@@ -25,8 +25,9 @@ void IRAM_ATTR onTimer()
     // It would be a bad situation for the device to just be sitting there draining battery.
     // This timer will get triggered regardless of what the program is doing, and will reboot.
     // Enable at start, disable after all requests have gone through and screen update starts.
-    log_w("Alert triggered, restarting device");
-    ESP.restart();
+    log_w("Alert triggered, forcing deep sleep for 30 seconds");
+    utils::ticker_deep_sleep(30 * uS_TO_S_FACTOR);
+    // deep sleep so we can pause then recover without printing a startup screen
     // maybe add some kind of logging to SPIFFS to warn if this is happening too frequently
 }
 
@@ -71,9 +72,7 @@ void setup()
     {
         log_d("Creating ap wifi manager");
         WiFiManager wm;
-        String msg = "Connect to:\n";
-        msg += wm.getAPIP();
-        display.writeGenericText(msg);
+        display.drawAccessPoint(wm.getAPIP());
 
         // async server alive in background, it will restart device when config received
         while(true){}
