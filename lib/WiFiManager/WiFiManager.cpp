@@ -1,6 +1,7 @@
 #include "WiFiManager.h"
 #include <ArduinoJson.h>
 #include "Utils.h"
+#include "Constants.h"
 
 #include <AsyncElegantOTA.h>
 
@@ -64,7 +65,7 @@ WiFiManager::WiFiManager() :
 {
     log_d("Creating access point for configuration");
     WiFi.mode(WIFI_AP);
-    m_isAccessPoint = WiFi.softAP("Ticker", NULL);
+    m_isAccessPoint = WiFi.softAP(constants::WifiAccessPointName, NULL);
     if (!m_isAccessPoint)
     {
         log_w("Access point init failed");
@@ -171,6 +172,7 @@ void WiFiManager::setTimeVars(tm& timeinfo)
     char buf[20];
     strftime(buf, 20, "%e %b", &timeinfo);
     m_dayMonth = String(buf);
+    m_dayMonth.trim();
 
     char buf2[20];
     strftime(buf2, 20, "%H:%M", &timeinfo);

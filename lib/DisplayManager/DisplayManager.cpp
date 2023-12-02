@@ -51,3 +51,8 @@ void DisplayManager::drawConfig(const String& ssid, const String& password, cons
 {
     m_impl->drawConfig(ssid, password, crypto, fiat, refreshInterval);
 }
+
+void DisplayManager::drawAccessPoint(const String& ip)
+{
+    m_impl->drawAccessPoint(ip);
+}

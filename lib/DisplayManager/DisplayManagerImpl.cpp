@@ -1,6 +1,7 @@
 #include "DisplayManagerImpl.h"
 
 #include "bitmaps.h"
+#include "Constants.h"
 
 #include <FreeSans18pt7b_edit.h>
 #include <Fonts/FreeSans12pt7b.h>
@@ -218,6 +219,50 @@ void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, 
     }
     while (m_display.nextPage());
     
+}
+
+void DisplayManagerImpl::drawAccessPoint(const String& ip)
+{
+    const char* browserMsg = "Open in browser:";
+
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(8, 9, epd_bitmap_access_point, 234, 106, GxEPD_BLACK);
+
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setCursor(80, 25);
+        m_display.print("Configuration");
+        m_display.writeLine(75,  30,
+                            225, 30,
+                            GxEPD_BLACK);
+
+        m_display.setFont(&FreeSans12pt7b);
+        // centre the ip in this region
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        m_display.getTextBounds(ip, 0, 0, &tbx, &tby, &tbw, &tbh);
+        uint16_t x = ((m_max_x - tbw) / 2) - tbx;
+        m_display.setCursor(x, 110);
+        m_display.print(ip);
+
+        m_display.setFont(&FreeSans9pt7b);
+
+        m_display.setCursor(70, 50);
+        m_display.print("Join network: ");
+        m_display.print(constants::WifiAccessPointName);
+
+        // centre the ip in this region
+        m_display.getTextBounds(browserMsg, 0, 0, &tbx, &tby, &tbw, &tbh);
+        x = ((m_max_x - tbw) / 2) - tbx;
+        m_display.setCursor(x, 83);
+        m_display.print(browserMsg);
+
+    }
+    while (m_display.nextPage());
 }
 
 void DisplayManagerImpl::addLines()
