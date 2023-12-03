@@ -139,7 +139,7 @@ WiFiManager::WiFiManager() :
         
             file.close();
 
-            delay(2000);
+            delay(500);
             ESP.restart();
         });
 
