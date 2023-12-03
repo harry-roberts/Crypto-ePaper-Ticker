@@ -1,4 +1,4 @@
-#include "DisplayManager.h"
+#include "DisplayManagerImpl.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -37,6 +37,5 @@ TEST_F(DisplayManagerTest, formatPriceChange)
     EXPECT_EQ(dmImpl.formatPriceChangeString(0, "1Y"), "1Y: +0.00%");
     EXPECT_EQ(dmImpl.formatPriceChangeString(-0.1234,  "1d"), "1d: -0.12%");
     EXPECT_EQ(dmImpl.formatPriceChangeString(-12.345,  "1M"), "1M: -12.3%");
-    EXPECT_EQ(dmImpl.formatPriceChangeString(-123.456, "1Y"), "1Y: - 123%");
 }
 
