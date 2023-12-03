@@ -92,7 +92,14 @@ void setup()
         if (error)
         {
             log_w("Failed to read config file"); // should probably restart in force config mode
-            return;
+
+            // maybe add a config site option to "factory reset" to delete config and force this mode on startup
+            log_d("Creating ap wifi manager");
+            WiFiManager wm;
+            display.drawAccessPoint(wm.getAPIP());
+
+            // async server alive in background, it will restart device when config received
+            while(true){}
         }
 
         String ssid = doc["s"];
