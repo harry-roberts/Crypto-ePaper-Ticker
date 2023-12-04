@@ -1,7 +1,7 @@
 #include "Utils.h"
-
 #include "SPIFFS.h"
 #include "Constants.h"
+#include <ArduinoJson.h>
 
 namespace utils
 {
@@ -94,6 +94,53 @@ bool initSpiffs(bool formatOnFail)
     }
     log_d("SPIFFS mounted successfully");
     return true;
+}
+
+String getDeviceID()
+{
+    uint8_t mac[6];
+    char macStr[6] = { 0 };
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    sprintf(macStr, "%02x%02x%02x", mac[3], mac[4], mac[5]); // starting 3 is always the same, only need last 3
+    return String(macStr);
+}
+
+CurrentConfig readConfig(bool& success)
+{
+    // read config from spiffs
+    if (!utils::initSpiffs())
+    {
+        log_w("Could not init spiffs");
+        return CurrentConfig();
+    }
+
+    File file = SPIFFS.open("/config.json");
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc, file);
+    if (error)
+    {
+        log_w("Couldn't read config");
+        return CurrentConfig();
+    }
+
+    String ssid = doc["s"];
+    String pass = doc["p"];
+    String crypto = doc["c"];
+    String fiat = doc["f"];
+    String refreshMins = doc["r"];
+    String tz = doc["t"];
+    int refreshSeconds = refreshMins.toInt() * 60;
+
+    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
+            ssid, pass, crypto, fiat, refreshMins, tz.c_str());
+
+    CurrentConfig cfg(ssid, pass, crypto, fiat, refreshMins, tz);
+
+    file.close();
+
+    if (!ssid.isEmpty()) // password allowed to be blank, others have defaults in html 
+        success = true;
+    return cfg;
 }
 
 }

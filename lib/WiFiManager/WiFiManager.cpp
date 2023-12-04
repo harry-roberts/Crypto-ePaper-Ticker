@@ -1,6 +1,5 @@
 #include "WiFiManager.h"
 #include <ArduinoJson.h>
-#include "Utils.h"
 #include "Constants.h"
 
 #include <AsyncElegantOTA.h>
@@ -12,10 +11,11 @@ const char* CONFIG_PARAM_INPUT_PASS = "pass";
 const char* CONFIG_PARAM_INPUT_CRYPTO = "crypto";
 const char* CONFIG_PARAM_INPUT_FIAT = "fiat";
 const char* CONFIG_PARAM_INPUT_REFRESH = "refresh";
+const char* CONFIG_PARAM_INPUT_TIMEZONE = "timezone";
 
-WiFiManager::WiFiManager(const String& ssid, const String& password) :
-    m_ssid(ssid),
-    m_password(password),
+WiFiManager::WiFiManager(const CurrentConfig& cfg) :
+    m_ssid(cfg.ssid),
+    m_password(cfg.pass),
     m_request(new RequestCoinGecko()),
     m_server(0), // unused in this mode
     m_isAccessPoint(false)
@@ -38,8 +38,8 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
 
         struct tm timeinfo;
 
-        log_d("Setting timezone to London");
-        setenv("TZ", "GMT0BST,M3.5.0/1,M10.5.0", 1); // will be in config
+        log_d("Setting timezone to %s", cfg.tz.c_str());
+        setenv("TZ", cfg.tz.c_str(), 1); // will be in config
         tzset();
 
         bool gotTime = false;
@@ -60,8 +60,8 @@ WiFiManager::WiFiManager(const String& ssid, const String& password) :
     }
 }
 
-WiFiManager::WiFiManager() :
-    m_server(80)
+WiFiManager::WiFiManager(const CurrentConfig& cfg, int port) :
+    m_server(port)
 {
     log_d("Creating access point for configuration");
     WiFi.mode(WIFI_AP);
@@ -78,6 +78,9 @@ WiFiManager::WiFiManager() :
         m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
         {
             request->send(SPIFFS, "/config.html", "text/html");
+        });
+        m_server.on("/config.js", HTTP_GET, [this, cfg](AsyncWebServerRequest *request){
+            request->send(200, "text/html", generateConfigJs(cfg));
         });
         m_server.serveStatic("/", SPIFFS, "/");
         m_server.on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
@@ -113,6 +116,11 @@ WiFiManager::WiFiManager() :
                     {
                         doc["r"] = p->value().c_str();
                         log_d("Refresh interval set to: %s", p->value().c_str());
+                    }
+                    if (p->name() == CONFIG_PARAM_INPUT_TIMEZONE)
+                    {
+                        doc["t"] = p->value().c_str();
+                        log_d("Time zone set to: %s", p->value().c_str());
                     }
                 }
             }
@@ -295,4 +303,25 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
     }
 
     return "";
+}
+
+String WiFiManager::generateConfigJs(CurrentConfig cfg)
+{
+    // creates a String containing a JavaScript struct of the given config, to be served with the config html 
+    // to pre-populate inputs with the current values
+    String configJs = "window.config = { ssid: \"";
+    configJs += cfg.ssid;
+    configJs += "\", pass: \"";
+    configJs += cfg.pass;
+    configJs += "\", crypto: \"";
+    configJs += cfg.crypto;
+    configJs += "\", fiat: \"";
+    configJs += cfg.fiat;
+    configJs += "\", refresh: \"";
+    configJs += cfg.refreshMins;
+    configJs += "\", tz: \"";
+    configJs += cfg.tz;
+    configJs += "\"};";
+
+    return configJs;
 }

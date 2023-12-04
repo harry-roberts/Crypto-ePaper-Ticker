@@ -8,6 +8,28 @@
 namespace utils
 {
 
+struct CurrentConfig
+{
+    String ssid;
+    String pass;
+    String crypto;
+    String fiat;
+    String refreshMins;
+    String tz;
+
+    CurrentConfig() {}
+
+    CurrentConfig(String ssid_, String pass_, String crypto_, String fiat_, String refreshMins_, String tz_)
+    {
+        ssid = ssid_;
+        pass = pass_;
+        crypto = crypto_;
+        fiat = fiat_;
+        refreshMins = refreshMins_;
+        tz = tz_;
+    }
+};
+
 float raw_voltage();
 float convert_voltage_reading(float volt);
 float battery_read();
@@ -17,6 +39,10 @@ void ticker_hibernate();
 void ticker_deep_sleep(uint64_t time);
 
 bool initSpiffs(bool formatOnFail = true);
+
+String getDeviceID();
+
+CurrentConfig readConfig(bool& success);
 
 }
 
