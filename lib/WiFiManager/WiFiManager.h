@@ -6,14 +6,17 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "time.h"
+#include "Utils.h"
 
 #include "RequestBase.h"
+
+using utils::CurrentConfig;
 
 class WiFiManager
 {
 public:
-    WiFiManager(const String& ssid, const String& password); // for connecting to known network
-    WiFiManager(); // for access point
+    WiFiManager(const CurrentConfig& cfg); // for connecting to known network
+    WiFiManager(const CurrentConfig& cfg, int port); // for access point
 
     bool isConnected(); // is connected to wifi
     bool hasInternet(); // have made a successful remote connection (have epoch time)
@@ -36,6 +39,7 @@ private:
 
     bool getTime(tm& timeinfo);
     void setTimeVars(tm& timeinfo);
+    String generateConfigJs(CurrentConfig cfg);
 
     String m_ssid;
     String m_password;

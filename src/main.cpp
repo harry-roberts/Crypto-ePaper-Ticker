@@ -17,6 +17,8 @@ RTC_DATA_ATTR int bootCount = 0;
 
 hw_timer_t *alert_timer = NULL;
 
+using utils::CurrentConfig;
+
 void IRAM_ATTR onTimer()
 {
     // failsafe to reboot if taking too long
@@ -54,7 +56,10 @@ void setup()
     delay(200);
     auto wakeup_reason = esp_sleep_get_wakeup_cause();
 
+    String wifiMac = utils::getDeviceID();
+
     log_i("Program started");
+    log_i("MAC ID: %s", wifiMac.c_str());
     log_d("ESP wakeup reason = %d", wakeup_reason);
 
     // timer setup
@@ -67,10 +72,13 @@ void setup()
     bool shouldEnterConfig = !digitalRead(BUTTON_PIN);
     log_d("should enter config = %d", shouldEnterConfig);
 
+    bool hasConfig = false;
+    CurrentConfig cfg = utils::readConfig(hasConfig);
+
     if (shouldEnterConfig)
     {
         log_d("Creating ap wifi manager");
-        WiFiManager wm;
+        WiFiManager wm(cfg, 80);
         display.drawAccessPoint(wm.getAPIP());
 
         // async server alive in background, it will restart device when config received
@@ -78,46 +86,35 @@ void setup()
     }
     else
     {
-        // read config from spiffs
-        if (!utils::initSpiffs())
+        if (!hasConfig)
         {
-            log_w("Could not init spiffs");
-            return;
-        }
-
-        // read spiffs config
-        File file = SPIFFS.open("/config.json");
-        StaticJsonDocument<200> doc;
-        DeserializationError error = deserializeJson(doc, file);
-        if (error)
-        {
-            log_w("Failed to read config file"); // should probably restart in force config mode
+            log_w("Failed to get config values");
 
             // maybe add a config site option to "factory reset" to delete config and force this mode on startup
             log_d("Creating ap wifi manager");
-            WiFiManager wm;
+            WiFiManager wm(cfg, 80);
             display.drawAccessPoint(wm.getAPIP());
 
             // async server alive in background, it will restart device when config received
             while(true){}
         }
 
-        String ssid = doc["s"];
-        String pass = doc["p"];
-        String crypto = doc["c"];
-        String fiat = doc["f"];
-        String refreshMins = doc["r"];
+        String ssid = cfg.ssid;
+        String pass = cfg.pass;
+        String crypto = cfg.crypto;
+        String fiat = cfg.fiat;
+        String refreshMins = cfg.refreshMins;
+        String tz = cfg.tz;
         int refreshSeconds = refreshMins.toInt() * 60;
 
-        log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s", ssid, pass, crypto, fiat, refreshMins);
-
-        file.close();
+        log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
+              ssid, pass, crypto, fiat, refreshMins, tz.c_str());
 
         // don't write the config if it is part of an expected deep sleep timer wakeup
         if (wakeup_reason != ESP_SLEEP_WAKEUP_TIMER)
             display.drawConfig(ssid, pass, crypto, fiat, refreshMins.toInt());
         
-        WiFiManager wm(ssid, pass);
+        WiFiManager wm(cfg);
 
         if (!wm.isConnected())
         {
