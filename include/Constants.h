@@ -11,6 +11,13 @@ namespace constants
     inline constexpr float BatteryMinVoltage = 3.4;
 
     inline constexpr const char* WifiAccessPointName = "Ticker";
+
+    inline constexpr const char* ConfigKeySsid = "s";
+    inline constexpr const char* ConfigKeyPassword = "p";
+    inline constexpr const char* ConfigKeyCrypto = "c";
+    inline constexpr const char* ConfigKeyFiat = "f";
+    inline constexpr const char* ConfigKeyRefreshMins = "r";
+    inline constexpr const char* ConfigKeyTimezone = "t";
 }
 
 #endif

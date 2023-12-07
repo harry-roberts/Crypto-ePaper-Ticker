@@ -74,11 +74,12 @@ void setup()
 
     bool hasConfig = false;
     CurrentConfig cfg = utils::readConfig(hasConfig);
+    WiFiManager wm;
 
-    if (shouldEnterConfig)
+    if (shouldEnterConfig || !hasConfig)
     {
-        log_d("Creating ap wifi manager");
-        WiFiManager wm(cfg, 80);
+        log_d("Creating access point for config");
+        wm.initConfigMode(cfg, 80);
         display.drawAccessPoint(wm.getAPIP());
 
         // async server alive in background, it will restart device when config received
@@ -86,19 +87,6 @@ void setup()
     }
     else
     {
-        if (!hasConfig)
-        {
-            log_w("Failed to get config values");
-
-            // maybe add a config site option to "factory reset" to delete config and force this mode on startup
-            log_d("Creating ap wifi manager");
-            WiFiManager wm(cfg, 80);
-            display.drawAccessPoint(wm.getAPIP());
-
-            // async server alive in background, it will restart device when config received
-            while(true){}
-        }
-
         String ssid = cfg.ssid;
         String pass = cfg.pass;
         String crypto = cfg.crypto;
@@ -107,6 +95,13 @@ void setup()
         String tz = cfg.tz;
         int refreshSeconds = refreshMins.toInt() * 60;
 
+        // in case of some kind of error - don't want this null
+        if (refreshSeconds < 60)
+        {
+            refreshSeconds = 300;
+            refreshMins = String(refreshSeconds);
+        }
+
         log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
               ssid, pass, crypto, fiat, refreshMins, tz.c_str());
 
@@ -114,7 +109,7 @@ void setup()
         if (wakeup_reason != ESP_SLEEP_WAKEUP_TIMER)
             display.drawConfig(ssid, pass, crypto, fiat, refreshMins.toInt());
         
-        WiFiManager wm(cfg);
+        wm.initNormalMode(cfg);
 
         if (!wm.isConnected())
         {

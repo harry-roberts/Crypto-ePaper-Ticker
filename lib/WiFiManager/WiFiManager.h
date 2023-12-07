@@ -10,13 +10,17 @@
 
 #include "RequestBase.h"
 
+#include <memory>
+
 using utils::CurrentConfig;
 
 class WiFiManager
 {
 public:
-    WiFiManager(const CurrentConfig& cfg); // for connecting to known network
-    WiFiManager(const CurrentConfig& cfg, int port); // for access point
+    WiFiManager() = default;
+
+    void initConfigMode(const CurrentConfig& cfg, int port); // configures access point
+    void initNormalMode(const CurrentConfig& cfg); // connects to known network
 
     bool isConnected(); // is connected to wifi
     bool hasInternet(); // have made a successful remote connection (have epoch time)
@@ -43,16 +47,16 @@ private:
 
     String m_ssid;
     String m_password;
-    RequestBase* m_request;
+    std::unique_ptr<RequestBase> m_request;
     bool m_isAccessPoint;
     bool m_spiffsInit = false;
 
-    String m_dayMonth = "Error"; // e.g "12 Oct"
-    String m_time = "";          // e.g. 12:34 
+    String m_dayMonth = "Error"; // e.g. "12 Oct"
+    String m_time = "";          // e.g. "12:34" 
     time_t m_epoch = -1;         // unix seconds
 
     WiFiClientSecure m_client;
-    AsyncWebServer m_server;
+    std::unique_ptr<AsyncWebServer> m_server;
 };
 
 #endif

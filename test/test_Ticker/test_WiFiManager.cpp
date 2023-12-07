@@ -16,21 +16,27 @@ protected:
         Serial.println();
     }
 
+    CurrentConfig cfg{login_ssid, login_password, "BTC", "USD", "5", "GMT0BST,M3.5.0/1,M10.5.0"};
 };
 
-TEST_F(WiFiManagerTest, DISABLED_badDetails)
+TEST_F(WiFiManagerTest, badDetails)
 {
-    WiFiManager wm("not real", "xyz");
+    WiFiManager wm;
+    CurrentConfig badCfg = cfg;
+    badCfg.ssid = "not real";
+    badCfg.pass = "wrong";
+    wm.initNormalMode(badCfg);
     EXPECT_EQ(wm.isConnected(), false);
 }
 
 TEST_F(WiFiManagerTest, data)
 {
-    WiFiManager wm(login_ssid, login_password);
+    WiFiManager wm;
+    wm.initNormalMode(cfg);
     EXPECT_EQ(wm.isConnected(), true);
 
     float currentPrice;
-    EXPECT_TRUE(wm.getCurrentPrice("BTC", "USD", currentPrice));
+    EXPECT_TRUE(wm.getCurrentPrice(cfg.crypto, cfg.fiat, currentPrice));
     EXPECT_GT(currentPrice, 0);
 
     // see compile_time.h
@@ -91,6 +97,7 @@ TEST_F(WiFiManagerTest, testCoinGecko)
 
 TEST_F(WiFiManagerTest, ssid)
 {
-    WiFiManager wm(login_ssid, login_password);
+    WiFiManager wm;
+    wm.initNormalMode(cfg);
     EXPECT_EQ(wm.getSsid(), login_ssid);
 }

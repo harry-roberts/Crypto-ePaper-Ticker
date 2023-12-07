@@ -123,18 +123,18 @@ CurrentConfig readConfig(bool& success)
         return CurrentConfig();
     }
 
-    String ssid = doc["s"];
-    String pass = doc["p"];
-    String crypto = doc["c"];
-    String fiat = doc["f"];
-    String refreshMins = doc["r"];
-    String tz = doc["t"];
+    String ssid = doc[constants::ConfigKeySsid];
+    String pass = doc[constants::ConfigKeyPassword];
+    String crypto = doc[constants::ConfigKeyCrypto];
+    String fiat = doc[constants::ConfigKeyFiat];
+    String refreshMins = doc[constants::ConfigKeyRefreshMins];
+    String tz = doc[constants::ConfigKeyTimezone];
     int refreshSeconds = refreshMins.toInt() * 60;
 
     log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
             ssid, pass, crypto, fiat, refreshMins, tz.c_str());
 
-    CurrentConfig cfg(ssid, pass, crypto, fiat, refreshMins, tz);
+    CurrentConfig cfg{ssid, pass, crypto, fiat, refreshMins, tz};
 
     file.close();
 
