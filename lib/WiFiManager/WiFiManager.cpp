@@ -6,20 +6,13 @@
 
 #include "SPIFFS.h"
 
-const char* CONFIG_PARAM_INPUT_SSID = "ssid";
-const char* CONFIG_PARAM_INPUT_PASS = "pass";
-const char* CONFIG_PARAM_INPUT_CRYPTO = "crypto";
-const char* CONFIG_PARAM_INPUT_FIAT = "fiat";
-const char* CONFIG_PARAM_INPUT_REFRESH = "refresh";
-const char* CONFIG_PARAM_INPUT_TIMEZONE = "timezone";
-
-WiFiManager::WiFiManager(const CurrentConfig& cfg) :
-    m_ssid(cfg.ssid),
-    m_password(cfg.pass),
-    m_request(new RequestCoinGecko()),
-    m_server(0), // unused in this mode
-    m_isAccessPoint(false)
+void WiFiManager::initNormalMode(const CurrentConfig& cfg)
 {
+    m_ssid = cfg.ssid;
+    m_password = cfg.pass;
+    m_request = std::make_unique<RequestCoinGecko>();
+    m_isAccessPoint = false;
+
     log_d("Connecting to known WiFi point %s", m_ssid.c_str());
     WiFi.begin(m_ssid, m_password);
     int retries = 0;
@@ -60,10 +53,10 @@ WiFiManager::WiFiManager(const CurrentConfig& cfg) :
     }
 }
 
-WiFiManager::WiFiManager(const CurrentConfig& cfg, int port) :
-    m_server(port)
+void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
 {
     log_d("Creating access point for configuration");
+    m_server = std::make_unique<AsyncWebServer>(port);
     WiFi.mode(WIFI_AP);
     m_isAccessPoint = WiFi.softAP(constants::WifiAccessPointName, NULL);
     if (!m_isAccessPoint)
@@ -75,15 +68,15 @@ WiFiManager::WiFiManager(const CurrentConfig& cfg, int port) :
     if (utils::initSpiffs())
     {
         // Web Server Root URL
-        m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+        m_server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
         {
             request->send(SPIFFS, "/config.html", "text/html");
         });
-        m_server.on("/config.js", HTTP_GET, [this, cfg](AsyncWebServerRequest *request){
+        m_server->on("/config.js", HTTP_GET, [this, cfg](AsyncWebServerRequest *request){
             request->send(200, "text/html", generateConfigJs(cfg));
         });
-        m_server.serveStatic("/", SPIFFS, "/");
-        m_server.on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
+        m_server->serveStatic("/", SPIFFS, "/");
+        m_server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
         {
             int params = request->params();
             StaticJsonDocument<256> doc;
@@ -92,36 +85,10 @@ WiFiManager::WiFiManager(const CurrentConfig& cfg, int port) :
                 AsyncWebParameter* p = request->getParam(i);
                 if(p->isPost())
                 {
-                    if (p->name() == CONFIG_PARAM_INPUT_SSID)
-                    {
-                        doc["s"] = p->value().c_str();
-                        log_d("SSID set to: %s", p->value().c_str());
-                    }
-                    if (p->name() == CONFIG_PARAM_INPUT_PASS)
-                    {
-                        doc["p"] = p->value().c_str();
-                        log_d("Password set to: %s", p->value().c_str());
-                    }
-                    if (p->name() == CONFIG_PARAM_INPUT_CRYPTO)
-                    {
-                        doc["c"] = p->value().c_str();
-                        log_d("Crypto set to: %s", p->value().c_str());
-                    }
-                    if (p->name() == CONFIG_PARAM_INPUT_FIAT)
-                    {
-                        doc["f"] = p->value().c_str();
-                        log_d("Fiat set to: %s", p->value().c_str());
-                    }
-                    if (p->name() == CONFIG_PARAM_INPUT_REFRESH)
-                    {
-                        doc["r"] = p->value().c_str();
-                        log_d("Refresh interval set to: %s", p->value().c_str());
-                    }
-                    if (p->name() == CONFIG_PARAM_INPUT_TIMEZONE)
-                    {
-                        doc["t"] = p->value().c_str();
-                        log_d("Time zone set to: %s", p->value().c_str());
-                    }
+                    // use the name of the input as the json key
+                    // they were set to a single character in the html to save space in this json
+                    doc[p->name()] = p->value().c_str();
+                    log_d("config \"%s\" set to: %s", p->name(), p->value().c_str());
                 }
             }
 
@@ -153,9 +120,9 @@ WiFiManager::WiFiManager(const CurrentConfig& cfg, int port) :
 
         // this library adds a /update page to the existing web server, which handles an OTA file upload for new firmware (it just works)
         // ideal solution would be to connect to a remote web server to fetch a file itself, but this works fine for first version
-        AsyncElegantOTA.begin(&m_server);
+        AsyncElegantOTA.begin(m_server.get());
 
-        m_server.begin();
+        m_server->begin();
     }
 }
 
@@ -177,14 +144,17 @@ bool WiFiManager::getTime(tm& timeinfo)
 
 void WiFiManager::setTimeVars(tm& timeinfo)
 {
-    char buf[20];
-    strftime(buf, 20, "%e %b", &timeinfo);
-    m_dayMonth = String(buf);
-    m_dayMonth.trim();
-
-    char buf2[20];
-    strftime(buf2, 20, "%H:%M", &timeinfo);
-    m_time = String(buf2);
+    {
+        char buf[20];
+        strftime(buf, 20, "%e %b", &timeinfo);
+        m_dayMonth = String(buf);
+        m_dayMonth.trim();
+    }
+    {
+        char buf[20];
+        strftime(buf, 20, "%H:%M", &timeinfo);
+        m_time = String(buf);
+    }
 
     time(&m_epoch);
 }
@@ -227,10 +197,8 @@ String WiFiManager::getAPIP()
     if (m_isAccessPoint)
         return WiFi.softAPIP().toString();
     else
-    {
         log_w("Access point init failed, cannot get IP");
-    }
-    return "";
+    return "N/A - Error";
 }
 
 bool WiFiManager::isConnected()

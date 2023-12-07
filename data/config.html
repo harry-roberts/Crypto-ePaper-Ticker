@@ -16,11 +16,11 @@
         <form action="/" method="POST">
           <p>
             <label for="ssid">SSID</label>
-            <input type="text" id ="ssid" name="ssid"><br>
+            <input type="text" id ="ssid" name="s"><br>
             <label for="pass">Password</label>
-            <input type="text" id ="pass" name="pass"><br>
+            <input type="text" id ="pass" name="p"><br>
             <label for="crypto">Crypto</label>
-            <select name="crypto" id="crypto"> 
+            <select name="c" id="crypto"> 
                 <option value="ADA">ADA</option>
                 <option value="BNB">BNB</option> 
                 <option value="BTC" selected>BTC</option>
@@ -31,13 +31,13 @@
                 <option value="XRP">XRP</option> 
             </select><br>
             <label for="fiat">Fiat</label>
-            <select name="fiat" id="fiat"> 
+            <select name="f" id="fiat"> 
                 <option value="EUR">EUR</option>
                 <option value="GBP">GBP</option>
                 <option value="USD" selected>USD</option>
             </select><br>
             <label for="refresh">Refresh Interval</label>
-            <select name="refresh" id="refresh">
+            <select name="r" id="refresh">
                 <option value="5">5 minutes</option>
                 <option value="10">10 minutes</option>
                 <option value="15">15 minutes</option> 
@@ -47,7 +47,7 @@
                 <option value="60">1 hour</option>
             </select><br>
             <label for="timezone">Time Zone</label>
-            <select name="timezone" id="timezone">
+            <select name="t" id="timezone">
                 <!-- list from https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv --> 
                 <option value="GMT0BST,M3.5.0/1,M10.5.0" selected>Europe/London</option>
                 <option value="GMT0">Africa/Abidjan</option>

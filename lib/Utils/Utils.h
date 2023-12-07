@@ -16,18 +16,6 @@ struct CurrentConfig
     String fiat;
     String refreshMins;
     String tz;
-
-    CurrentConfig() {}
-
-    CurrentConfig(String ssid_, String pass_, String crypto_, String fiat_, String refreshMins_, String tz_)
-    {
-        ssid = ssid_;
-        pass = pass_;
-        crypto = crypto_;
-        fiat = fiat_;
-        refreshMins = refreshMins_;
-        tz = tz_;
-    }
 };
 
 float raw_voltage();
