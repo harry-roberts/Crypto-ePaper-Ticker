@@ -10,8 +10,8 @@ void WiFiManager::initNormalMode(const CurrentConfig& cfg)
 {
     m_ssid = cfg.ssid;
     m_password = cfg.pass;
-    m_request = std::make_unique<RequestCoinGecko>();
     m_isAccessPoint = false;
+    initDataSources();
 
     log_d("Connecting to known WiFi point %s", m_ssid.c_str());
     WiFi.begin(m_ssid, m_password);
@@ -126,6 +126,11 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
     }
 }
 
+size_t WiFiManager::getNumDataSources()
+{
+    return m_requests.size();
+}
+
 void WiFiManager::disconnect()
 {
     WiFi.disconnect(true);
@@ -213,16 +218,32 @@ bool WiFiManager::hasInternet()
     return m_epoch > 0;
 }
 
-bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out)
+bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, 
+                                 float& priceAtTime_out, size_t dataSourceIndex)
 {
+    if (dataSourceIndex > getNumDataSources() || m_requests.at(dataSourceIndex) == nullptr)
+    {
+        log_w("Invalid data source at index %d", dataSourceIndex);
+        return false;
+    }
+        
+    log_d("Starting data request from source %s", m_requests.at(dataSourceIndex)->getServer().c_str());
     if (unixOffset == 0)
     {
-        String url = m_request->urlCurrentPrice(crypto, fiat);
-        return m_request->currentPrice(getUrlContent(m_request->getServer(), url), crypto, fiat, priceAtTime_out);
+        String url = m_requests.at(dataSourceIndex)->urlCurrentPrice(crypto, fiat);
+        if (m_requests.at(dataSourceIndex)->currentPrice(getUrlContent(m_requests.at(dataSourceIndex)->getServer(), url), 
+                                                         crypto, fiat, priceAtTime_out))
+            return true;
     }
-
-    String url = m_request->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
-    return m_request->priceAtTime(getUrlContent(m_request->getServer(), url), priceAtTime_out);
+    else
+    {
+        String url = m_requests.at(dataSourceIndex)->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
+        if (m_requests.at(dataSourceIndex)->priceAtTime(getUrlContent(m_requests.at(dataSourceIndex)->getServer(), url), 
+                                                        priceAtTime_out))
+            return true;
+    }
+    log_d("Data attempt unsuccessful with this source (%s)");
+    return false;
 }
 
 String WiFiManager::getUrlContent(const String& server, const String& url)
@@ -292,4 +313,10 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
     configJs += "\"};";
 
     return configJs;
+}
+
+void WiFiManager::initDataSources()
+{
+    m_requests.push_back(std::make_unique<RequestCoinGecko>());
+    m_requests.push_back(std::make_unique<RequestBinance>());
 }

@@ -36,9 +36,20 @@ TEST_F(WiFiManagerTest, data)
     EXPECT_EQ(wm.getSsid(), login_ssid);
     EXPECT_EQ(wm.isConnected(), true);
 
-    float currentPrice;
-    EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, 0, currentPrice));
-    EXPECT_GT(currentPrice, 0);
+    // test every available data source
+    float price;
+    size_t numDataSources = wm.getNumDataSources();
+    for (size_t i = 0; i < numDataSources; i++)
+    {
+        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, 0, price, i));
+        delay(500);
+        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneDay, price, i));
+        delay(500);
+        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneMonth, price, i));
+        delay(500);
+        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneYear, price, i));
+        delay(500);
+    }
 
     // see compile_time.h
     // expect time is within 24h of test compile time    

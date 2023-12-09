@@ -25,7 +25,7 @@ public:
     bool isConnected(); // is connected to wifi
     bool hasInternet(); // have made a successful remote connection (have epoch time)
 
-    bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out);
+    bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out, size_t dataSource = 0);
 
     String getDayMonthStr();
     String getTimeStr();
@@ -35,10 +35,13 @@ public:
     String getSsid();
     String getAPIP();
 
+    size_t getNumDataSources();
+
     void disconnect();
 
 private:
     String getUrlContent(const String& server, const String& url);
+    void initDataSources();
 
     bool getTime(tm& timeinfo);
     void setTimeVars(tm& timeinfo);
@@ -46,7 +49,7 @@ private:
 
     String m_ssid;
     String m_password;
-    RequestBasePtr m_request;
+    std::vector<RequestBasePtr> m_requests;
     bool m_isAccessPoint;
     bool m_spiffsInit = false;
 
