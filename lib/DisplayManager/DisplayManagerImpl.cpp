@@ -59,7 +59,7 @@ void DisplayManagerImpl::writeGenericText(const String& textToWrite)
 }
 void DisplayManagerImpl::hibernate()
 {
-    delay(1000);
+    delay(200);
     m_display.hibernate();
 }
 

@@ -25,7 +25,6 @@ public:
     bool isConnected(); // is connected to wifi
     bool hasInternet(); // have made a successful remote connection (have epoch time)
 
-    bool getCurrentPrice(const String& crypto, const String& fiat, float& price_out);
     bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out);
 
     String getDayMonthStr();
@@ -47,7 +46,7 @@ private:
 
     String m_ssid;
     String m_password;
-    std::unique_ptr<RequestBase> m_request;
+    RequestBasePtr m_request;
     bool m_isAccessPoint;
     bool m_spiffsInit = false;
 

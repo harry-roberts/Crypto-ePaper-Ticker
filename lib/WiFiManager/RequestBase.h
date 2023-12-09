@@ -2,6 +2,7 @@
 #define REQUESTBASE_H
 
 #include <Arduino.h>
+#include <memory>
 
 class RequestBase
 {
@@ -24,6 +25,8 @@ public:
 
     // **Note** unix time between all functions should be consistent as SECONDS
 };
+
+using RequestBasePtr = std::unique_ptr<RequestBase>;
 
 class RequestBinance : public RequestBase
 {
