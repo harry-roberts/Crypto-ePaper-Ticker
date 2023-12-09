@@ -62,7 +62,6 @@ void setup()
     // start deep sleep
     log_d("Starting deep sleep for %d seconds", refreshSeconds);
     Serial.flush();
-    ++bootCount;
     utils::ticker_deep_sleep(refreshSeconds * constants::MicrosToSecondsFactor);
 }
 

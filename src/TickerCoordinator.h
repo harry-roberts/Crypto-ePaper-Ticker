@@ -27,7 +27,7 @@ private:
     void enterNormalMode();
     
     bool checkWifi();
-    bool getPriceAtTime(time_t unixOffset, float& priceOut, bool quickReturn = false);
+    bool getPriceAtTime(time_t unixOffset, float& priceOut, size_t dataSource = 0, bool quickReturn = false);
 
 };
 

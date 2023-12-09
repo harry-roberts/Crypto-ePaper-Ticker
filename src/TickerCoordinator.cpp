@@ -65,11 +65,21 @@ void TickerCoordinator::enterNormalMode()
     }
 
     float price, priceOneDay, priceOneMonth, priceOneYear;
+    bool fullSuccess = false;
+    size_t numDataSources = m_wifiManager.getNumDataSources();
 
-    bool fullSuccess = getPriceAtTime(0, price) &&
-                       getPriceAtTime(constants::SecondsOneDay, priceOneDay) &&
-                       getPriceAtTime(constants::SecondsOneMonth, priceOneMonth) &&
-                       getPriceAtTime(constants::SecondsOneYear, priceOneYear, true);
+    // for each available data source, try and get all price data, if succeed then break
+    // all data must come from the same source to be consistent
+    for (size_t i = 0; i < numDataSources; i++)
+    {
+        fullSuccess = getPriceAtTime(0, price, i) &&
+                      getPriceAtTime(constants::SecondsOneDay, priceOneDay, i) &&
+                      getPriceAtTime(constants::SecondsOneMonth, priceOneMonth, i) &&
+                      getPriceAtTime(constants::SecondsOneYear, priceOneYear, i, true);
+        if (fullSuccess)
+            break;
+        delay(500);
+    }
     
     // can turn wifi off now - saves some power while updating display
     m_wifiManager.disconnect();
@@ -113,13 +123,13 @@ bool TickerCoordinator::checkWifi()
     return true;
 }
 
-bool TickerCoordinator::getPriceAtTime(time_t unixOffset, float& priceOut, bool quickReturn)
+bool TickerCoordinator::getPriceAtTime(time_t unixOffset, float& priceOut, size_t dataSource, bool quickReturn)
 {
     bool gotPrice = false;
     int retries = 0;
     while(!gotPrice && retries < constants::WiFiRequestRetries) // in case of failure retry
     {
-        gotPrice = m_wifiManager.getPriceAtTime(m_cfg.crypto, m_cfg.fiat, unixOffset, priceOut);
+        gotPrice = m_wifiManager.getPriceAtTime(m_cfg.crypto, m_cfg.fiat, unixOffset, priceOut, dataSource);
         // good to have a slight delay between requests, but the final request does not need one
         if (!quickReturn)
             delay(500);
