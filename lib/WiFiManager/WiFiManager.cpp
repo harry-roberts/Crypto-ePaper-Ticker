@@ -48,7 +48,7 @@ void WiFiManager::initNormalMode(const CurrentConfig& cfg)
                 log_d("Epoch: %d", m_epoch);
             }
             timeRetries++;
-            delay(1000);
+            delay(500);
         }
     }
 }
@@ -213,14 +213,14 @@ bool WiFiManager::hasInternet()
     return m_epoch > 0;
 }
 
-bool WiFiManager::getCurrentPrice(const String& crypto, const String& fiat, float& price_out)
-{
-    String url = m_request->urlCurrentPrice(crypto, fiat);
-    return m_request->currentPrice(getUrlContent(m_request->getServer(), url), crypto, fiat, price_out);
-}
-
 bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out)
 {
+    if (unixOffset == 0)
+    {
+        String url = m_request->urlCurrentPrice(crypto, fiat);
+        return m_request->currentPrice(getUrlContent(m_request->getServer(), url), crypto, fiat, priceAtTime_out);
+    }
+
     String url = m_request->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
     return m_request->priceAtTime(getUrlContent(m_request->getServer(), url), priceAtTime_out);
 }

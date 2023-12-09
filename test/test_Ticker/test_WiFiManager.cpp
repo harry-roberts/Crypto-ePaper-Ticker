@@ -33,10 +33,11 @@ TEST_F(WiFiManagerTest, data)
 {
     WiFiManager wm;
     wm.initNormalMode(cfg);
+    EXPECT_EQ(wm.getSsid(), login_ssid);
     EXPECT_EQ(wm.isConnected(), true);
 
     float currentPrice;
-    EXPECT_TRUE(wm.getCurrentPrice(cfg.crypto, cfg.fiat, currentPrice));
+    EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, 0, currentPrice));
     EXPECT_GT(currentPrice, 0);
 
     // see compile_time.h
@@ -47,9 +48,9 @@ TEST_F(WiFiManagerTest, data)
 
 TEST_F(WiFiManagerTest, requests)
 {
-    std::vector<RequestBase*> rfs;
-    rfs.push_back(new RequestBinance());
-    rfs.push_back(new RequestCoinGecko());
+    std::vector<RequestBasePtr> rfs;
+    rfs.push_back(std::make_unique<RequestBinance>());
+    rfs.push_back(std::make_unique<RequestCoinGecko>());
 
     EXPECT_EQ(rfs.at(0)->getServer(), "api.binance.com");
     EXPECT_EQ(rfs.at(1)->getServer(), "api.coingecko.com");
@@ -57,7 +58,7 @@ TEST_F(WiFiManagerTest, requests)
 
 TEST_F(WiFiManagerTest, testBinance)
 {
-    RequestBase* binance = new RequestBinance();
+    RequestBasePtr binance(new RequestBinance());
     const String currentPriceContent = "{\"symbol\":\"BTCGBP\",\"price\":\"29396.32000000\"}";
     const String priceAtTimeContent = "[[1697382420000,\"22138.72000000\",\"22138.72000000\",\"22138.72000000\",\"22138.72000000\",\"0.00000000\",1697382479999,\"0.00000000\",0,\"0.00000000\",\"0.00000000\",\"0\"]]";
     float currentPrice_out;
@@ -77,7 +78,7 @@ TEST_F(WiFiManagerTest, testBinance)
 
 TEST_F(WiFiManagerTest, testCoinGecko)
 {
-    RequestBase* coingecko = new RequestCoinGecko();
+    RequestBasePtr coingecko(new RequestCoinGecko());
     const String currentPriceContent = "{\"bitcoin\":{\"gbp\":29319.1767}}";
     const String priceAtTimeContent = "{\"prices\":[[1701021346883,29585.3913]],\"market_caps\":[[1701021346883,578750969047.6592]],\"total_volumes\":[[1701021346883,8726978835.980974]]}";
     float currentPrice_out;
@@ -93,11 +94,4 @@ TEST_F(WiFiManagerTest, testCoinGecko)
 
     EXPECT_TRUE(coingecko->priceAtTime(priceAtTimeContent, timePrice_out));
     EXPECT_NEAR(timePrice_out, 29585.39, 0.1);
-}
-
-TEST_F(WiFiManagerTest, ssid)
-{
-    WiFiManager wm;
-    wm.initNormalMode(cfg);
-    EXPECT_EQ(wm.getSsid(), login_ssid);
 }
