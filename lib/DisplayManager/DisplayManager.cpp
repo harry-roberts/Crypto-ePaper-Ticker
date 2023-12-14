@@ -8,11 +8,10 @@ DisplayManager::DisplayManager() :
 
 DisplayManager::~DisplayManager() = default;
 
-void DisplayManager::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
-                                  float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
-                                  int batteryPercent)
+void DisplayManager::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                                  const String& time, int batteryPercent)
 {    
-    m_impl->writeDisplay(crypto, fiat, mainPrice, priceOneDay, priceOneMonth, priceOneYear, dayMonth, time, batteryPercent);
+    m_impl->writeDisplay(crypto, fiat, priceData, dayMonth, time, batteryPercent);
 }
 
 void DisplayManager::writeGenericText(const String& textToWrite)

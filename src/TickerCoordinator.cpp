@@ -64,31 +64,17 @@ void TickerCoordinator::enterNormalMode()
         return;
     }
 
-    float price, priceOneDay, priceOneMonth, priceOneYear;
-    bool fullSuccess = false;
-    size_t numDataSources = m_wifiManager.getNumDataSources();
-
-    // for each available data source, try and get all price data, if succeed then break
-    // all data must come from the same source to be consistent
-    for (size_t i = 0; i < numDataSources; i++)
-    {
-        fullSuccess = getPriceAtTime(0, price, i) &&
-                      getPriceAtTime(constants::SecondsOneDay, priceOneDay, i) &&
-                      getPriceAtTime(constants::SecondsOneMonth, priceOneMonth, i) &&
-                      getPriceAtTime(constants::SecondsOneYear, priceOneYear, i, true);
-        if (fullSuccess)
-            break;
-        delay(500);
-    }
+    std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    std::map<long, float> priceData = m_wifiManager.getPriceData(m_cfg.crypto, m_cfg.fiat, unixOffsets);
     
     // can turn wifi off now - saves some power while updating display
     m_wifiManager.disconnect();
     // requests may have taken some time, refresh so display will show time at point of update
     m_wifiManager.refreshTime(); 
 
-    if (fullSuccess)
+    if (!priceData.empty())
     {
-        m_displayManager.writeDisplay(m_cfg.crypto, m_cfg.fiat, price, priceOneDay, priceOneMonth, priceOneYear, 
+        m_displayManager.writeDisplay(m_cfg.crypto, m_cfg.fiat, priceData, 
                                       m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr(), m_batPct);
     }
     else
@@ -121,20 +107,4 @@ bool TickerCoordinator::checkWifi()
         return false;
     }
     return true;
-}
-
-bool TickerCoordinator::getPriceAtTime(time_t unixOffset, float& priceOut, size_t dataSource, bool quickReturn)
-{
-    bool gotPrice = false;
-    int retries = 0;
-    while(!gotPrice && retries < constants::WiFiRequestRetries) // in case of failure retry
-    {
-        gotPrice = m_wifiManager.getPriceAtTime(m_cfg.crypto, m_cfg.fiat, unixOffset, priceOut, dataSource);
-        // good to have a slight delay between requests, but the final request does not need one
-        if (!quickReturn)
-            delay(500);
-        retries++;
-    }
-
-    return gotPrice;
 }

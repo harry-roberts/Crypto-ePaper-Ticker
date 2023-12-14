@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <memory>
+#include <map>
 
 class DisplayManagerImpl;
 
@@ -12,9 +13,8 @@ public:
     DisplayManager();
     ~DisplayManager();
 
-    void writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
-                      float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
-                      int batteryPercent);
+    void writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                      const String& time, int batteryPercent);
     void writeGenericText(const String& textToWrite);
     void hibernate();
 
