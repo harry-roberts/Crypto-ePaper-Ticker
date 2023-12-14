@@ -6,12 +6,13 @@
 
 #include "SPIFFS.h"
 
-void WiFiManager::initNormalMode(const CurrentConfig& cfg)
+void WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSources)
 {
     m_ssid = cfg.ssid;
     m_password = cfg.pass;
     m_isAccessPoint = false;
-    initDataSources();
+    if (initAllDataSources)
+        initAllAvailableDataSources();
 
     log_d("Connecting to known WiFi point %s", m_ssid.c_str());
     WiFi.begin(m_ssid, m_password);
@@ -126,11 +127,6 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
     }
 }
 
-size_t WiFiManager::getNumDataSources()
-{
-    return m_requests.size();
-}
-
 void WiFiManager::disconnect()
 {
     WiFi.disconnect(true);
@@ -218,32 +214,71 @@ bool WiFiManager::hasInternet()
     return m_epoch > 0;
 }
 
-bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, 
-                                 float& priceAtTime_out, size_t dataSourceIndex)
+void WiFiManager::addDataSource(RequestBasePtr request)
 {
-    if (dataSourceIndex > getNumDataSources() || m_requests.at(dataSourceIndex) == nullptr)
+    m_requests.push_back(std::move(request));
+}
+
+std::map<long, float> WiFiManager::getPriceData(const String& crypto, const String& fiat, std::set<long> unixOffsets)
+{
+    // try and get all data requested from a single data source
+    // if it fails, retry from start with next data source
+
+    // initialise a map with the required keys
+    std::map<long, float> successRtn;
+    for (const auto &i : unixOffsets)
     {
-        log_w("Invalid data source at index %d", dataSourceIndex);
-        return false;
+        successRtn[i];
     }
-        
-    log_d("Starting data request from source %s", m_requests.at(dataSourceIndex)->getServer().c_str());
+
+    for (const auto& request : m_requests)
+    {
+        log_d("Starting requests for symbol=%s fiat=%s using source %s", crypto.c_str(), fiat.c_str(), request->getServer().c_str());
+        // for each data source, try and get price for each given unix offset
+        // if one fails, move on to next data source
+
+        bool fullSuccess = false;
+        for (auto& [key, value] : successRtn)
+        {
+            bool iSuccess = false;
+            int retries = 0;
+            // try to get price with retry
+            while (!iSuccess && retries < 2)
+            {
+                log_d("Requesting price with unix offset %d", key);
+                iSuccess = getPriceAtTime(crypto, fiat, key, value, request); // sets the value in successRtn for its unix offset
+                retries++;
+            }
+            
+            if (!iSuccess)
+            {
+                log_d("Request failed, will try next data source");
+                fullSuccess = false;
+                break;
+            }
+            fullSuccess = true;
+                
+        }
+        // if fullSuccess = true here then we have all price data from a single source successfully
+        if (fullSuccess)
+            return successRtn;
+        // else we carry on to next data source 
+    }
+    // if we get here then we never got all data from a single data source, return empty map
+    return std::map<long, float>();
+}
+
+bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, 
+                                 float& priceAtTime_out, const RequestBasePtr& request)
+{        
     if (unixOffset == 0)
     {
-        String url = m_requests.at(dataSourceIndex)->urlCurrentPrice(crypto, fiat);
-        if (m_requests.at(dataSourceIndex)->currentPrice(getUrlContent(m_requests.at(dataSourceIndex)->getServer(), url), 
-                                                         crypto, fiat, priceAtTime_out))
-            return true;
+        String url = request->urlCurrentPrice(crypto, fiat);
+        return request->currentPrice(getUrlContent(request->getServer(), url), crypto, fiat, priceAtTime_out);
     }
-    else
-    {
-        String url = m_requests.at(dataSourceIndex)->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
-        if (m_requests.at(dataSourceIndex)->priceAtTime(getUrlContent(m_requests.at(dataSourceIndex)->getServer(), url), 
-                                                        priceAtTime_out))
-            return true;
-    }
-    log_d("Data attempt unsuccessful with this source (%s)");
-    return false;
+
+    String url = request->urlPriceAtTime(m_epoch, unixOffset, crypto, fiat);
+    return request->priceAtTime(getUrlContent(request->getServer(), url), priceAtTime_out);
 }
 
 String WiFiManager::getUrlContent(const String& server, const String& url)
@@ -315,7 +350,7 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
     return configJs;
 }
 
-void WiFiManager::initDataSources()
+void WiFiManager::initAllAvailableDataSources()
 {
     m_requests.push_back(std::make_unique<RequestCoinGecko>());
     m_requests.push_back(std::make_unique<RequestBinance>());

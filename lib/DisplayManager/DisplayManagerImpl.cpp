@@ -17,25 +17,31 @@ DisplayManagerImpl::DisplayManagerImpl(int rotation) :
     m_display.setRotation(rotation);
 };
 
-void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, float mainPrice, float priceOneDay, 
-                                      float priceOneMonth, float priceOneYear, const String& dayMonth, const String& time, 
-                                      int batteryPercent)
+void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                                      const String& time, int batteryPercent)
 {
+    if (priceData[0] == 0 || priceData[constants::SecondsOneDay] == 0 || 
+        priceData[constants::SecondsOneMonth] == 0 || priceData[constants::SecondsOneYear] == 0)
+    {
+        log_w("Called with wrong price data for this implementation");
+        writeGenericText("Unsupported data times requested");
+        return;
+    }
     m_display.setFullWindow();
     m_display.firstPage();
     do
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(mainPrice));
+        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
         writeCrypto(crypto);
         writeDateTime(dayMonth, time);
         writeBattery(batteryPercent);
 
         // could try and split them by thirds but these offsets fit well
-        drawArrow(writePriceChange(mainPrice, priceOneDay, "1d", -6));
-        writePriceChange(mainPrice, priceOneMonth, "1M", 20);
-        writePriceChange(mainPrice, priceOneYear, "1Y", 46);
+        drawArrow(writePriceChange(priceData[0], priceData[constants::SecondsOneDay], "1d", -6));
+        writePriceChange(priceData[0], priceData[constants::SecondsOneMonth], "1M", 20);
+        writePriceChange(priceData[0], priceData[constants::SecondsOneYear], "1Y", 46);
     }
     while (m_display.nextPage());
 }
@@ -48,7 +54,7 @@ void DisplayManagerImpl::writeGenericText(const String& textToWrite)
     {
         m_display.fillScreen(GxEPD_WHITE);
 
-        m_display.setFont(&FreeSans18pt7b);
+        m_display.setFont(&FreeSans9pt7b);
         m_display.setTextColor(GxEPD_BLACK);
 
         m_display.setCursor(2, 30);
@@ -298,7 +304,9 @@ void DisplayManagerImpl::writeMainPrice(const String& price)
     uint16_t x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
     uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
 
-    m_display.setCursor(x+m_crypto_box_x2, y+1); // looked better moving down 1 more pixel
+    if (price.indexOf(",") != -1)
+        y += 2; // comma goes below text, looks better moving it down
+    m_display.setCursor(x+m_crypto_box_x2, y);
     m_display.print(price);
 }
 

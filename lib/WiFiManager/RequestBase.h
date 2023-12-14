@@ -13,6 +13,8 @@ public:
     //   - generating a url for a given request type
     //   - taking content received from this url and returning data of interest
 
+    virtual ~RequestBase() = default;
+
     virtual String getServer() = 0;
 
     // url functions

@@ -19,6 +19,24 @@ protected:
     CurrentConfig cfg{login_ssid, login_password, "BTC", "USD", "5", "GMT0BST,M3.5.0/1,M10.5.0"};
 };
 
+class MockRequest : public RequestBase
+{
+public:
+    MOCK_METHOD(String, getServer, (), (override));
+
+    MOCK_METHOD(String, urlCurrentPrice, 
+                (const String& crypto, const String& fiat), (override));
+    MOCK_METHOD(String, urlPriceAtTime, 
+                (uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat), 
+                (override));
+
+    MOCK_METHOD(bool, currentPrice, 
+                (const String& content, const String& crypto, const String& fiat, float& price_out), 
+                (override));
+    MOCK_METHOD(bool, priceAtTime, 
+                (const String& content, float& priceAtTime_out), (override));
+};
+
 TEST_F(WiFiManagerTest, badDetails)
 {
     WiFiManager wm;
@@ -29,27 +47,12 @@ TEST_F(WiFiManagerTest, badDetails)
     EXPECT_EQ(wm.isConnected(), false);
 }
 
-TEST_F(WiFiManagerTest, data)
+TEST_F(WiFiManagerTest, connect)
 {
     WiFiManager wm;
     wm.initNormalMode(cfg);
     EXPECT_EQ(wm.getSsid(), login_ssid);
     EXPECT_EQ(wm.isConnected(), true);
-
-    // test every available data source
-    float price;
-    size_t numDataSources = wm.getNumDataSources();
-    for (size_t i = 0; i < numDataSources; i++)
-    {
-        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, 0, price, i));
-        delay(500);
-        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneDay, price, i));
-        delay(500);
-        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneMonth, price, i));
-        delay(500);
-        EXPECT_TRUE(wm.getPriceAtTime(cfg.crypto, cfg.fiat, constants::SecondsOneYear, price, i));
-        delay(500);
-    }
 
     // see compile_time.h
     // expect time is within 24h of test compile time    
@@ -85,6 +88,20 @@ TEST_F(WiFiManagerTest, testBinance)
 
     EXPECT_TRUE(binance->priceAtTime(priceAtTimeContent, timePrice_out));
     EXPECT_NEAR(timePrice_out, 22138.72, 0.1);
+
+    WiFiManager wm;
+    wm.initNormalMode(cfg, false);
+    wm.addDataSource(std::move(binance));
+
+    std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    std::map<long, float> priceData = wm.getPriceData(cfg.crypto, cfg.fiat, unixOffsets);
+
+    EXPECT_FALSE(priceData.empty());
+    for (const auto& [key, value] : priceData)
+    {
+        EXPECT_GT(value, 0);
+    }
+
 }
 
 TEST_F(WiFiManagerTest, testCoinGecko)
@@ -105,4 +122,17 @@ TEST_F(WiFiManagerTest, testCoinGecko)
 
     EXPECT_TRUE(coingecko->priceAtTime(priceAtTimeContent, timePrice_out));
     EXPECT_NEAR(timePrice_out, 29585.39, 0.1);
+
+    WiFiManager wm;
+    wm.initNormalMode(cfg, false);
+    wm.addDataSource(std::move(coingecko));
+
+    std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    std::map<long, float> priceData = wm.getPriceData(cfg.crypto, cfg.fiat, unixOffsets);
+
+    EXPECT_FALSE(priceData.empty());
+    for (const auto& [key, value] : priceData)
+    {
+        EXPECT_GT(value, 0);
+    }
 }

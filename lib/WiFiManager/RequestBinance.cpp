@@ -83,6 +83,7 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
 
     if (firstComma > 0 && secondComma > 0)
     {
+        // todo - this might not be reliable if an error is returned
         priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
         log_d("priceAtTime_out = %f", priceAtTime_out);
 
