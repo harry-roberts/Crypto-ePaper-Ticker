@@ -29,6 +29,7 @@ String RequestCoinGecko::getServer()
 
 String RequestCoinGecko::urlCurrentPrice(const String& crypto, const String& fiat)
 {
+    // {"bitcoin":{"gbp":33357.5612}}
     // https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=gbp&precision=4
     // precision has to be specified otherwise it isn't as helpful as binance
     String rtn;
@@ -123,25 +124,23 @@ bool RequestCoinGecko::priceAtTime(const String& content, float& priceAtTime_out
     //                                        ^^^^^^^^^^^^^^^^^^
     //               "market_caps":[[1701021346883,578750969047.6592]],
     //               "total_volumes":[[1701021346883,8726978835.980974]]}
-    // can get value between comma and first ]
     // might end up with 2 data points due to granularity errors but this is fine
 
     DynamicJsonDocument doc(384); // https://arduinojson.org/v6/assistant/#/step1
     deserializeJson(doc, content);
 
+    priceAtTime_out = 0;
     if (doc.containsKey("prices"))
     {
-        String pricesContent = doc["prices"];
-        int comma = pricesContent.indexOf(",");
-        int squareBracket = pricesContent.indexOf("]");
-        if (comma > 0 && squareBracket > 0)
+        JsonArray pricesContent = doc["prices"];
+        if (pricesContent.size() && pricesContent[0].size() == 2)
         {
-            priceAtTime_out = pricesContent.substring(comma+1, squareBracket).toFloat();
-            log_d("priceAtTime_out = %f", priceAtTime_out);
-
-            if (priceAtTime_out > 0)
-                return true;
+            priceAtTime_out = pricesContent[0][1].as<float>();
         }
+        log_d("priceAtTime_out = %f", priceAtTime_out);
+
+        if (priceAtTime_out > 0)
+            return true;
     }
 
     return false;

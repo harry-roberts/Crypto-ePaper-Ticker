@@ -86,10 +86,12 @@ bool RequestKuCoin::priceAtTime(const String& content, float& priceAtTime_out)
     DynamicJsonDocument doc(256); // https://arduinojson.org/v6/assistant/#/step1
     deserializeJson(doc, content);
 
+    priceAtTime_out = 0;
     if (doc.containsKey("data"))
     {
         JsonArray dataContent = doc["data"];
-        priceAtTime_out = dataContent[0][1].as<float>();
+        if (dataContent.size() && dataContent[0].size() == 7)
+            priceAtTime_out = dataContent[0][1].as<float>();
         log_d("priceAtTime_out = %f", priceAtTime_out);
 
         if (priceAtTime_out > 0)
