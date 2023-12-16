@@ -66,9 +66,9 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
 {
     log_d("content = %s", content.c_str());
 
-    if (content == "")
+    if (content == "" || content.charAt(0) != '[') // errors will have some json starting with {, data is only an array
     {
-        log_w("No content, returning");
+        log_w("Bad content, returning");
         return false;
     }
 
@@ -76,20 +76,22 @@ bool RequestBinance::priceAtTime(const String& content, float& priceAtTime_out)
     // content e.g:
     // [[1697382420000,"22138.72000000","22138.72000000","22138.72000000","22138.72000000","0.00000000",1697382479999,"0.00000000",0,"0.00000000","0.00000000","0"]]
     // we want this     ^^^^^^^^^^^^^^
-    // can get string between first two commas
 
-    int firstComma = content.indexOf(",");
-    int secondComma = content.indexOf(",", firstComma+1);
+    StaticJsonDocument<384> doc;
+    deserializeJson(doc, content);
 
-    if (firstComma > 0 && secondComma > 0)
+    JsonArray dataArray = doc.as<JsonArray>();
+
+    priceAtTime_out = 0;
+    if (dataArray.size() && dataArray[0].size() == 12)
     {
-        // todo - this might not be reliable if an error is returned
-        priceAtTime_out = content.substring(firstComma+2, secondComma-1).toFloat();
-        log_d("priceAtTime_out = %f", priceAtTime_out);
-
-        if (priceAtTime_out > 0)
-            return true;
+        priceAtTime_out = dataArray[0][1].as<float>();
     }
+    log_d("priceAtTime_out = %f", priceAtTime_out);
+
+    if (priceAtTime_out > 0)
+        return true;
+
     return false;
 }
 

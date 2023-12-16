@@ -74,7 +74,7 @@ TEST_F(WiFiManagerTest, testBinance)
 {
     RequestBasePtr binance(new RequestBinance());
     const String currentPriceContent = "{\"symbol\":\"BTCGBP\",\"price\":\"29396.32000000\"}";
-    const String priceAtTimeContent = "[[1697382420000,\"22138.72000000\",\"22138.72000000\",\"22138.72000000\",\"22138.72000000\",\"0.00000000\",1697382479999,\"0.00000000\",0,\"0.00000000\",\"0.00000000\",\"0\"]]";
+    const String priceAtTimeContent = "[[1697382420000,\"22138.72000000\",\"22238.72000000\",\"22338.72000000\",\"22438.72000000\",\"0.00000000\",1697382479999,\"0.00000000\",0,\"0.00000000\",\"0.00000000\",\"0\"]]";
     float currentPrice_out;
     float timePrice_out;
 
