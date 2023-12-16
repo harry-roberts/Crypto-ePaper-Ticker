@@ -3,7 +3,6 @@
 #include "bitmaps.h"
 #include "Constants.h"
 
-#include <FreeSans18pt7b_edit.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -27,6 +26,8 @@ void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, 
         writeGenericText("Unsupported data times requested");
         return;
     }
+    setCryptoBoxWidth(crypto, dayMonth, time);
+
     m_display.setFullWindow();
     m_display.firstPage();
     do
@@ -312,7 +313,7 @@ void DisplayManagerImpl::writeMainPrice(const String& price)
 
 void DisplayManagerImpl::writeCrypto(const String& crypto)
 {
-    m_display.setFont(&FreeSans18pt7b);
+    m_display.setFont(m_current_crypto_box_font);
     m_display.setTextColor(GxEPD_WHITE);
 
     // centre the crypto in this region
@@ -333,7 +334,7 @@ void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& tim
     // centre the day/month in this region
     int16_t tbx, tby; uint16_t tbw, tbh;
     m_display.getTextBounds(dayMonth, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = (((m_date_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
+    uint16_t x = (((m_crypto_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
     uint16_t y = (((m_date_box_y2-m_date_box_y1) - tbh) / 2) - tby;
 
     // but move 10 px higher
@@ -342,7 +343,7 @@ void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& tim
 
     // centre the day/month in this region
     m_display.getTextBounds(time, 0, 0, &tbx, &tby, &tbw, &tbh);
-    x = (((m_date_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
+    x = (((m_crypto_box_x2-m_date_box_x1) - tbw) / 2) - tbx;
     y = (((m_date_box_y2-m_date_box_y1) - tbh) / 2) - tby;
 
     // and move this 10 px lower
@@ -400,29 +401,87 @@ bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare,
 
 void DisplayManagerImpl::drawArrow(bool isPositive)
 {
-    // todo define this in the centre of the box
+    uint16_t midPointX = m_crypto_box_x2 / 2;
     if (isPositive)
     {
-        m_display.fillTriangle(27, 70,
-                            60, 70,
-                            43, 45,
-                            GxEPD_BLACK);
-        m_display.fillTriangle(27, 70,
-                            60, 70,
-                            43, 64,
-                            GxEPD_WHITE);
+        m_display.fillTriangle(midPointX-16, 70,
+                               midPointX+16, 70,
+                               midPointX,    45,
+                               GxEPD_BLACK);
+        m_display.fillTriangle(midPointX-16, 70,
+                               midPointX+16, 70,
+                               midPointX,    64,
+                               GxEPD_WHITE);
     }
     else
     {
-        m_display.fillTriangle(27, 45,
-                            60, 45,
-                            43, 70,
-                            GxEPD_BLACK);
-        m_display.fillTriangle(27, 45,
-                            60, 45,
-                            43, 51,
-                            GxEPD_WHITE);
+        m_display.fillTriangle(midPointX-16, 45,
+                               midPointX+16, 45,
+                               midPointX,    70,
+                               GxEPD_BLACK);
+        m_display.fillTriangle(midPointX-16, 45,
+                               midPointX+16, 45,
+                               midPointX,    51,
+                               GxEPD_WHITE);
     }
+}
+
+void DisplayManagerImpl::setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time)
+{
+    // calculate the width that the crypto box should be, based on the widest of the symbol/date/time    
+
+    // crypto symbol
+    m_display.setFont(m_current_crypto_box_font);
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(crypto, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t cryptoWidth = (2 * m_min_crypto_padding) + tbw;
+    log_d("cryptoWidth = %d", cryptoWidth);
+    
+    // date
+    m_display.setFont(&FreeSans9pt7b);
+    m_display.getTextBounds(dayMonth, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t dateWidth = (2 * m_min_date_padding) + tbw;
+    log_d("dateWidth1 = %d", dateWidth);
+
+    // time
+    m_display.getTextBounds(time, 0, 0, &tbx, &tby, &tbw, &tbh);
+    if (((2 * m_min_date_padding) + tbw) > dateWidth)
+        dateWidth = (2 * m_min_date_padding) + tbw;
+    log_d("dateWidth2 = %d", dateWidth);
+
+    dateWidth += m_date_box_x1;
+    log_d("dateWidth3 = %d", dateWidth);
+    uint16_t maxWidth = cryptoWidth > dateWidth ? cryptoWidth : dateWidth;
+
+    log_d("Max width = %d", maxWidth);
+
+    if (maxWidth > m_max_allowed_crypto_box_width && m_current_crypto_box_font == m_default_crypto_box_font)
+    {
+        log_d("Set font to 12pt and try again");
+        m_current_crypto_box_font = &FreeSans12pt7b;
+        setCryptoBoxWidth(crypto, dayMonth, time);
+        return;
+    }
+    else if (maxWidth > m_max_allowed_crypto_box_width && m_current_crypto_box_font != &FreeSans9pt7b)
+    {
+        log_d("Set font to 9pt and try again");
+        m_current_crypto_box_font = &FreeSans9pt7b;
+        setCryptoBoxWidth(crypto, dayMonth, time);
+        return;
+    }
+    else if (maxWidth > m_max_allowed_crypto_box_width)
+    {
+        // no symbol should be still longer then the max at 9pt
+        log_w("Very long symbol/date/time (%s/%s/%s) cannot fit within crypto box, max width of these is %d", 
+              crypto.c_str(), dayMonth.c_str(), time.c_str(), maxWidth);
+    }
+
+    if (maxWidth < m_min_allowed_crypto_box_width)
+        m_crypto_box_x2 = m_min_allowed_crypto_box_width;
+    else if (maxWidth > m_max_allowed_crypto_box_width)
+        m_crypto_box_x2 = m_max_allowed_crypto_box_width;
+    else
+        m_crypto_box_x2 = maxWidth;
 }
 
 String DisplayManagerImpl::formatPriceString(float price)
