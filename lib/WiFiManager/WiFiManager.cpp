@@ -237,6 +237,13 @@ std::map<long, float> WiFiManager::getPriceData(const String& crypto, const Stri
         // for each data source, try and get price for each given unix offset
         // if one fails, move on to next data source
 
+        // kucoin can only do USD for full data
+        if (request->getServer() == "api.kucoin.com" && fiat != "USD")
+        {
+            log_d("Non USD fiat requested from KuCoin, moving to next source");
+            continue;
+        }
+
         bool fullSuccess = false;
         for (auto& [key, value] : successRtn)
         {
@@ -353,5 +360,6 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
 void WiFiManager::initAllAvailableDataSources()
 {
     m_requests.push_back(std::make_unique<RequestCoinGecko>());
+    m_requests.push_back(std::make_unique<RequestKuCoin>());
     m_requests.push_back(std::make_unique<RequestBinance>());
 }

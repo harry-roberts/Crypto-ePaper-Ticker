@@ -136,3 +136,36 @@ TEST_F(WiFiManagerTest, testCoinGecko)
         EXPECT_GT(value, 0);
     }
 }
+
+TEST_F(WiFiManagerTest, testKuCoin)
+{
+    RequestBasePtr kucoin(new RequestKuCoin());
+    const String currentPriceContent = "{\"code\":\"200000\",\"data\":{\"BTC\":\"33399.5113799741158231\"}}";
+    const String priceAtTimeContent = "{\"code\":\"200000\",\"data\":[[\"1702653780\",\"32372.62\",\"32472.62\",\"32572.62\",\"32672.62\",\"0\",\"0\"]]}";
+    float currentPrice_out;
+    float timePrice_out;
+
+    EXPECT_EQ(kucoin->urlCurrentPrice("BTC", "GBP"), "https://api.kucoin.com/api/v1/prices?base=GBP&currencies=BTC");
+    EXPECT_EQ(kucoin->urlCurrentPrice("BTC", "USD"), "https://api.kucoin.com/api/v1/prices?base=USD&currencies=BTC");
+    EXPECT_EQ(kucoin->urlPriceAtTime(1701021297, constants::SecondsOneDay, "BTC", "GBP"), 
+                  "https://api.kucoin.com/api/v1/market/candles?type=1min&symbol=BTC-GBP&startAt=1700934897&endAt=1700934957");
+
+    EXPECT_TRUE(kucoin->currentPrice(currentPriceContent, "BTC", "GBP", currentPrice_out));
+    EXPECT_NEAR(currentPrice_out, 33399.51, 0.1);
+
+    EXPECT_TRUE(kucoin->priceAtTime(priceAtTimeContent, timePrice_out));
+    EXPECT_NEAR(timePrice_out, 32372.62, 0.1);
+
+    WiFiManager wm;
+    wm.initNormalMode(cfg, false);
+    wm.addDataSource(std::move(kucoin));
+
+    std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    std::map<long, float> priceData = wm.getPriceData(cfg.crypto, cfg.fiat, unixOffsets);
+
+    EXPECT_FALSE(priceData.empty());
+    for (const auto& [key, value] : priceData)
+    {
+        EXPECT_GT(value, 0);
+    }
+}
