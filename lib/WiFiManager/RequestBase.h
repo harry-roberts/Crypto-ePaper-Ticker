@@ -56,4 +56,17 @@ public:
     bool priceAtTime(const String& content, float& priceAtTime_out) override;
 };
 
+class RequestKuCoin : public RequestBase
+{
+public:
+    // defines functions as needed for the KuCoin API
+    String getServer() override;
+
+    String urlCurrentPrice(const String& crypto, const String& fiat) override;
+    String urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset, const String& crypto, const String& fiat) override;
+
+    bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
+    bool priceAtTime(const String& content, float& priceAtTime_out) override;
+};
+
 #endif
