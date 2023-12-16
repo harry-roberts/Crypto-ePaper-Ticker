@@ -6,9 +6,12 @@
 
 #include <GxEPD2_BW.h>
 
+#include <FreeSans18pt7b_edit.h>
+
 class DisplayManagerTest_formatPrice_Test;
 class DisplayManagerTest_formatPriceChange_Test;
 
+// implementation for a 250x122 display
 class DisplayManagerImpl
 {
 public:
@@ -41,6 +44,7 @@ private:
 
     void drawArrow(bool isPositive);
 
+    void setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time);
     String formatPriceString(float price);
     String formatPriceChangeString(float percentChange, const String& timeframe);
     void formatCommas(char *buf, int price);
@@ -50,20 +54,27 @@ private:
     const int m_max_x = 249;
     const int m_max_y = 121;
 
+    uint16_t m_min_crypto_padding = 5;
+    uint16_t m_min_date_padding = 5;
+    uint16_t m_min_allowed_crypto_box_width = 89;
+    uint16_t m_max_allowed_crypto_box_width = 102;
+
     const int m_crypto_box_x1 = 0;
     const int m_crypto_box_y1 = 0;
-    const int m_crypto_box_x2 = 89;
+    int m_crypto_box_x2 = m_min_allowed_crypto_box_width;
     const int m_crypto_box_y2 = 39;
 
     const int m_date_box_x1 = 15;
     const int m_date_box_y1 = 77;
-    const int m_date_box_x2 = m_crypto_box_x2;
     const int m_date_box_y2 = m_max_y;
 
     const int m_bat_box_x1 = 0;
     const int m_bat_box_y1 = 77;
     const int m_bat_box_x2 = m_date_box_x1;
     const int m_bat_box_y2 = m_max_y;
+
+    const GFXfont* const m_default_crypto_box_font = &FreeSans18pt7b;
+    const GFXfont* m_current_crypto_box_font = m_default_crypto_box_font;
 
     std::map<String, char> m_fiatSymbols = {{"GBP", '#'},
                                             {"USD", '$'},
