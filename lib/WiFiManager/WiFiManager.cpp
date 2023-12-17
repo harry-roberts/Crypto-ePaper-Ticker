@@ -58,7 +58,17 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
 {
     log_d("Creating access point for configuration");
     m_server = std::make_unique<AsyncWebServer>(port);
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP_STA);
+
+    log_d("Scanning for networks");
+    WiFi.disconnect();
+    int n = WiFi.scanNetworks();
+    for (int i = 0; i < n; ++i)
+    {
+        log_d("Network %d: %s Strength: %d", i, WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+        m_scannedSsids.insert(WiFi.SSID(i));
+    }
+
     m_isAccessPoint = WiFi.softAP(constants::WifiAccessPointName, NULL);
     if (!m_isAccessPoint)
     {
@@ -354,6 +364,16 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
     configJs += cfg.tz;
     configJs += "\"};";
 
+    // var wifis = ["WiFi 1","WiFi 2"];
+    configJs += "var wifis = [";
+    for (const auto& s : m_scannedSsids)
+    {
+        configJs += "\"";
+        configJs += s;
+        configJs += "\",";
+    }
+    configJs += "];";
+    
     return configJs;
 }
 
