@@ -31,6 +31,7 @@ int TickerCoordinator::run()
 void TickerCoordinator::enterConfigMode()
 {
     log_d("Creating access point for config");
+    m_displayManager.writeGenericText("Starting config mode...");
     m_wifiManager.initConfigMode(m_cfg, 80);
     m_displayManager.drawAccessPoint(m_wifiManager.getAPIP());
 

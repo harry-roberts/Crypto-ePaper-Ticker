@@ -57,6 +57,7 @@ private:
     std::vector<RequestBasePtr> m_requests;
     bool m_isAccessPoint;
     bool m_spiffsInit = false;
+    std::set<String> m_scannedSsids;
 
     String m_dayMonth = "Error"; // e.g. "12 Oct"
     String m_time = "";          // e.g. "12:34" 
