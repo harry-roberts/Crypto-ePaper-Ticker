@@ -25,6 +25,9 @@ namespace constants
 
     inline constexpr const int SleepSecondsAfterDataFail = 300;
     inline constexpr const int SleepSecondsAfterWiFiFail = 600;
+
+    inline constexpr const int NormalAlertTimeSeconds = 150;
+    inline constexpr const int ConfigAlertTimeSeconds = 600;
 }
 
 #endif
