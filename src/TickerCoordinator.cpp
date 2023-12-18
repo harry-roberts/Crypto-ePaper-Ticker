@@ -65,7 +65,12 @@ void TickerCoordinator::enterNormalMode()
         return;
     }
 
-    std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    std::set<long> unixOffsets;
+    if (m_cfg.displayMode == constants::ConfigDisplayModeSimple)
+        unixOffsets = {0, constants::SecondsOneDay};
+    else
+        unixOffsets = {0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
+    
     std::map<long, float> priceData = m_wifiManager.getPriceData(m_cfg.crypto, m_cfg.fiat, unixOffsets);
     
     // can turn wifi off now - saves some power while updating display

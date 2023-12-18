@@ -167,6 +167,11 @@
                     <option value="45">45 minutes</option> 
                     <option value="60">1 hour</option>
                 </select><br>
+                <label for="displayMode">Display Mode</label>
+                <select name="d" id="displayMode"> 
+                    <option value="simple">Simple</option>
+                    <option value="advanced">Advanced</option> 
+                </select><br>
                 <label for="timezone">Time Zone</label>
                 <select name="t" id="timezone">
                     <!-- list from https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv --> 
@@ -681,6 +686,14 @@
     for(var i, j = 0; i = refreshSelect.options[j]; j++) {
         if(i.value == window.config["refresh"]) {
             refreshSelect.selectedIndex = j;
+            break;
+        }
+    }
+
+    var displaySelect = document.getElementById("displayMode");
+    for(var i, j = 0; i = displaySelect.options[j]; j++) {
+        if(i.value == window.config["display"]) {
+            displaySelect.selectedIndex = j;
             break;
         }
     }

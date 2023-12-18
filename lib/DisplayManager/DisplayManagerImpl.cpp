@@ -4,8 +4,11 @@
 #include "bitmaps.h"
 #include "Constants.h"
 
+#include "FreeSansBold24pt7b_edit.h"
 #include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/FreeSansBold12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/Org_01.h>
@@ -21,13 +24,26 @@ DisplayManagerImpl::DisplayManagerImpl(int rotation) :
 void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
                                       const String& time, int batteryPercent)
 {
-    if (priceData[0] == 0 || priceData[constants::SecondsOneDay] == 0 || 
-        priceData[constants::SecondsOneMonth] == 0 || priceData[constants::SecondsOneYear] == 0)
+    if (priceData.size() == 2 && priceData[0] != 0 && priceData[constants::SecondsOneDay] != 0)
     {
-        log_w("Called with wrong price data for this implementation");
+        writeDisplaySimple(crypto, fiat, priceData, dayMonth, time, batteryPercent);
+    }
+    else if (priceData.size() == 4 && priceData[0] != 0 || priceData[constants::SecondsOneDay] != 0 || 
+        priceData[constants::SecondsOneMonth] != 0 || priceData[constants::SecondsOneYear] != 0)
+    {
+        writeDisplayAdvanced(crypto, fiat, priceData, dayMonth, time, batteryPercent);
+    }
+    else
+    {
+        log_w("No known display format for this data");
         writeGenericText("Unsupported data times requested");
         return;
     }
+}
+
+void DisplayManagerImpl::writeDisplayAdvanced(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                                              const String& time, int batteryPercent)
+{
     setCryptoBoxWidth(crypto, dayMonth, time);
 
     m_display.setFullWindow();
@@ -36,15 +52,35 @@ void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, 
     {
         m_display.fillScreen(GxEPD_WHITE);
         addLines();
-        writeMainPrice(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
+        fillCryptoBox();
+        writeMainPriceAdvanced(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
         writeCrypto(crypto);
-        writeDateTime(dayMonth, time);
+        writeDateTimeAdvanced(dayMonth, time);
         writeBattery(batteryPercent);
 
         // could try and split them by thirds but these offsets fit well
         drawArrow(writePriceChange(priceData[0], priceData[constants::SecondsOneDay], "1d", -6));
         writePriceChange(priceData[0], priceData[constants::SecondsOneMonth], "1M", 20);
         writePriceChange(priceData[0], priceData[constants::SecondsOneYear], "1Y", 46);
+    }
+    while (m_display.nextPage());
+}
+
+void DisplayManagerImpl::writeDisplaySimple(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                                            const String& time, int batteryPercent)
+{
+    setCryptoBoxWidth(crypto, dayMonth, time, true);
+
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+        fillCryptoBox(true);
+        writeCrypto(crypto, true);
+        writeMainPriceSimple(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
+        writePriceChange(priceData[0], priceData[constants::SecondsOneDay], "1 day", 48, true);
+        writeDateTimeSimple(dayMonth, time);
     }
     while (m_display.nextPage());
 }
@@ -292,12 +328,16 @@ void DisplayManagerImpl::addLines()
     m_display.writeLine(0,             m_bat_box_y1+10,
                         m_date_box_x1, m_bat_box_y1+10,
                         GxEPD_BLACK);
-    m_display.fillRect(0,                            0,
-                    m_crypto_box_x2, m_crypto_box_y2,
-                    GxEPD_BLACK);
 }
 
-void DisplayManagerImpl::writeMainPrice(const String& price)
+void DisplayManagerImpl::fillCryptoBox(bool centre)
+{
+    m_display.fillRect(centre ? (m_max_x-m_crypto_box_x2)/2 : 0, 0,
+                       m_crypto_box_x2, m_crypto_box_y2,
+                       GxEPD_BLACK);
+}
+
+void DisplayManagerImpl::writeMainPriceAdvanced(const String& price)
 {
     m_display.setFont(&FreeSans18pt7b);
     m_display.setTextColor(GxEPD_BLACK);
@@ -314,22 +354,50 @@ void DisplayManagerImpl::writeMainPrice(const String& price)
     m_display.print(price);
 }
 
-void DisplayManagerImpl::writeCrypto(const String& crypto)
+void DisplayManagerImpl::writeMainPriceSimple(const String& price)
+{
+    m_display.setFont(&FreeSansBold24pt7b);
+    m_display.setTextColor(GxEPD_BLACK);
+
+    // centre the price in this region
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(price, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t x = ((m_max_x - tbw) / 2) - tbx;
+    uint16_t y = 82;
+
+    m_display.setCursor(x, y);
+    m_display.print(price);
+}
+
+void DisplayManagerImpl::writeCrypto(const String& crypto, bool centre)
 {
     m_display.setFont(m_current_crypto_box_font);
     m_display.setTextColor(GxEPD_WHITE);
 
-    // centre the crypto in this region
-    int16_t tbx, tby; uint16_t tbw, tbh;
-    m_display.getTextBounds(crypto, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = ((m_crypto_box_x2 - tbw) / 2) - tbx;
-    uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
-    
-    m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
+    if (centre)
+    {
+        // centre the crypto in this region
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        m_display.getTextBounds(crypto, 0, 0, &tbx, &tby, &tbw, &tbh);
+        uint16_t x = ((m_max_x - tbw) / 2) - tbx;
+        uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
+        
+        m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
+    }
+    else
+    {
+        // centre the crypto in this region
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        m_display.getTextBounds(crypto, 0, 0, &tbx, &tby, &tbw, &tbh);
+        uint16_t x = ((m_crypto_box_x2 - tbw) / 2) - tbx;
+        uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
+        
+        m_display.setCursor(x, y+1); // looked better moving down 1 more pixel
+    }
     m_display.print(crypto);
 }
 
-void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& time)
+void DisplayManagerImpl::writeDateTimeAdvanced(const String& dayMonth, const String& time)
 {
     m_display.setFont(&FreeSans9pt7b);
     m_display.setTextColor(GxEPD_BLACK);
@@ -351,6 +419,29 @@ void DisplayManagerImpl::writeDateTime(const String& dayMonth, const String& tim
 
     // and move this 10 px lower
     m_display.setCursor(x+m_date_box_x1, y+m_date_box_y1+11);
+    m_display.print(time);
+}
+
+void DisplayManagerImpl::writeDateTimeSimple(const String& dayMonth, const String& time)
+{
+    m_display.setFont(&FreeSansBold9pt7b);
+    m_display.setTextColor(GxEPD_BLACK);
+
+    // centre the day/month in this region (m_max_x-m_crypto_box_x2)/2
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    m_display.getTextBounds(dayMonth, 0, 0, &tbx, &tby, &tbw, &tbh);
+    uint16_t x = ((((m_max_x-m_crypto_box_x2)/2) - tbw) / 2) - tbx;
+    uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
+
+    m_display.setCursor(x, y);
+    m_display.print(dayMonth);
+
+    m_display.getTextBounds(time, 0, 0, &tbx, &tby, &tbw, &tbh);
+    x = ((((m_max_x-m_crypto_box_x2)/2) - tbw) / 2) - tbx;
+    y = ((m_crypto_box_y2 - tbh) / 2) - tby;
+
+    // and move this 10 px lower
+    m_display.setCursor(x+((m_max_x-m_crypto_box_x2)/2)+m_crypto_box_x2, y);
     m_display.print(time);
 }
 
@@ -381,9 +472,12 @@ void DisplayManagerImpl::writeBattery(int batPct)
                     GxEPD_BLACK);
 }
 
-bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset)
+bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset, bool centre)
 {
-    m_display.setFont(&FreeMonoBold12pt7b);
+    if (centre)
+        m_display.setFont(&FreeSansBold12pt7b);
+    else
+        m_display.setFont(&FreeMonoBold12pt7b);
     m_display.setTextColor(GxEPD_BLACK);
 
     float percentChange = ((mainPrice - priceToCompare) / mainPrice) * 100;
@@ -393,10 +487,14 @@ bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare,
     // centre the change in this region
     int16_t tbx, tby; uint16_t tbw, tbh;
     m_display.getTextBounds(changeLine, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
+    uint16_t x;
+    if (centre)
+        x = ((m_max_x - tbw) / 2) - tbx;
+    else
+        x = (((m_max_x-m_crypto_box_x2) - tbw) / 2) - tbx;
     uint16_t y = ((m_max_y - tbh) / 2) - tby;
 
-    m_display.setCursor(x+m_crypto_box_x2, y+yOffset);
+    m_display.setCursor(x+(centre ? 0 : m_crypto_box_x2), y+yOffset);
     m_display.print(changeLine);
 
     return percentChange >= 0;
@@ -429,9 +527,14 @@ void DisplayManagerImpl::drawArrow(bool isPositive)
     }
 }
 
-void DisplayManagerImpl::setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time)
+void DisplayManagerImpl::setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time, bool centre)
 {
-    // calculate the width that the crypto box should be, based on the widest of the symbol/date/time    
+    // calculate the width that the crypto box should be, based on the widest of the symbol/date/time   
+    uint16_t m_max_allowed_crypto_box_width = 0;
+    if (centre)
+        m_max_allowed_crypto_box_width = m_max_allowed_crypto_box_width_simple;
+    else
+        m_max_allowed_crypto_box_width = m_max_allowed_crypto_box_width_advanced;
 
     // crypto symbol
     m_display.setFont(m_current_crypto_box_font);

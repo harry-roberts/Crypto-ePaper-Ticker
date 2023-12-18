@@ -18,6 +18,10 @@ namespace constants
     inline constexpr const char* ConfigKeyFiat = "f";
     inline constexpr const char* ConfigKeyRefreshMins = "r";
     inline constexpr const char* ConfigKeyTimezone = "t";
+    inline constexpr const char* ConfigKeyDisplayMode = "d";
+
+    inline constexpr const char* ConfigDisplayModeSimple = "simple";
+    inline constexpr const char* ConfigDisplayModeAdvanced = "advanced";
 
     inline constexpr const int WiFiRequestRetries = 2;
 
