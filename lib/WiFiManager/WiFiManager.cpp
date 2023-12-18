@@ -373,6 +373,10 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
         configJs += "\",";
     }
     configJs += "];";
+
+    configJs += "var deviceIdText = \"Device ID: ";
+    configJs += utils::getDeviceID();
+    configJs += "\";";
     
     return configJs;
 }
