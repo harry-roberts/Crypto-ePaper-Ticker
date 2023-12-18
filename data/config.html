@@ -640,12 +640,21 @@
       </div>
     </div>
   </div>
+  <footer>
+    <h3 id="deviceid"></h3>
+  </footer>
 
     <script src="/config.js"></script>
-    <!-- config.js contains a struct with the config values to pre-populate the inputs with,
-         and also an array of scanned ssids -->
+    <!-- config.js is generted by the main code, and contains:
+         a struct with the config values to pre-populate the inputs with (window.config)
+         an array of scanned ssids (wifis)
+         a string with the device ID (deviceIdText) -->
   
     <script>
+
+    let header = document.getElementById('deviceid');
+    header.innerHTML = deviceIdText;
+    
     var ssidInput = document.getElementById("ssid");
     ssidInput.value = window.config["ssid"];
 

@@ -1,4 +1,5 @@
 #include "DisplayManagerImpl.h"
+#include "Utils.h"
 
 #include "bitmaps.h"
 #include "Constants.h"
@@ -6,6 +7,7 @@
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/Org_01.h>
 
 
@@ -183,24 +185,25 @@ void DisplayManagerImpl::drawYesWifiNoCrypto(const String& dayMonth, const Strin
 void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
                                     int refreshInterval)
 {
-    const String topMsg = "Starting Ticker...";
+    const String topMsg = "Starting Ticker";
     m_display.setFullWindow();
     m_display.firstPage();
     do
     {
         m_display.fillScreen(GxEPD_WHITE);
-
-        m_display.setFont(&FreeSans12pt7b);
         m_display.setTextColor(GxEPD_BLACK);
 
-        // centre the top message in this region
-        int16_t tbx, tby; uint16_t tbw, tbh;
-        m_display.getTextBounds(topMsg, 0, 0, &tbx, &tby, &tbw, &tbh);
-        uint16_t x = ((m_max_x - tbw) / 2) - tbx;
-        //uint16_t y = ((m_crypto_box_y2 - tbh) / 2) - tby;
 
-        m_display.setCursor(x, 25); // looked better moving down 1 more pixel
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setCursor(3, 25);
         m_display.print(topMsg);
+
+        // write device id in corner
+        m_display.setFont(&FreeMono9pt7b);
+        m_display.setCursor(160, 25);
+        m_display.print("(");
+        m_display.print(utils::getDeviceID());
+        m_display.print(")");
 
         m_display.writeLine(0,       32,
                             m_max_x, 32,
