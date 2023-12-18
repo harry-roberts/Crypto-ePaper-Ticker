@@ -16,6 +16,7 @@ struct CurrentConfig
     String fiat;
     String refreshMins;
     String tz;
+    String displayMode;
 };
 
 float raw_voltage();

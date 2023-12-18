@@ -35,16 +35,24 @@ private:
     friend class ::DisplayManagerTest_formatPrice_Test;
     friend class ::DisplayManagerTest_formatPriceChange_Test;
 
+    void writeDisplayAdvanced(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                              const String& time, int batteryPercent);
+    void writeDisplaySimple(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
+                            const String& time, int batteryPercent);
+
     void addLines();
-    void writeMainPrice(const String& price);
-    void writeCrypto(const String& crypto);
-    void writeDateTime(const String& dayMonth, const String& time);
+    void fillCryptoBox(bool centre = false);
+    void writeMainPriceAdvanced(const String& price);
+    void writeMainPriceSimple(const String& price);
+    void writeCrypto(const String& crypto, bool centre = false);
+    void writeDateTimeAdvanced(const String& dayMonth, const String& time);
+    void writeDateTimeSimple(const String& dayMonth, const String& time);
     void writeBattery(int batPct);
-    bool writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset);
+    bool writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset, bool centre = false);
 
     void drawArrow(bool isPositive);
 
-    void setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time);
+    void setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time, bool centre = false);
     String formatPriceString(float price);
     String formatPriceChangeString(float percentChange, const String& timeframe);
     void formatCommas(char *buf, int price);
@@ -54,10 +62,11 @@ private:
     const int m_max_x = 249;
     const int m_max_y = 121;
 
-    uint16_t m_min_crypto_padding = 5;
-    uint16_t m_min_date_padding = 5;
-    uint16_t m_min_allowed_crypto_box_width = 89;
-    uint16_t m_max_allowed_crypto_box_width = 102;
+    const uint16_t m_min_crypto_padding = 6;
+    const uint16_t m_min_date_padding = 6;
+    const uint16_t m_min_allowed_crypto_box_width = 89;
+    const uint16_t m_max_allowed_crypto_box_width_advanced = 102;
+    const uint16_t m_max_allowed_crypto_box_width_simple = 110;
 
     const int m_crypto_box_x1 = 0;
     const int m_crypto_box_y1 = 0;

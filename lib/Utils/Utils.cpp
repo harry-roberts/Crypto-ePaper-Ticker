@@ -129,12 +129,13 @@ CurrentConfig readConfig(bool& success)
     String fiat = doc[constants::ConfigKeyFiat];
     String refreshMins = doc[constants::ConfigKeyRefreshMins];
     String tz = doc[constants::ConfigKeyTimezone];
+    String displayMode = doc[constants::ConfigKeyDisplayMode];
     int refreshSeconds = refreshMins.toInt() * 60;
 
-    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
-            ssid, pass, crypto, fiat, refreshMins, tz.c_str());
+    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s", 
+            ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str());
 
-    CurrentConfig cfg{ssid, pass, crypto, fiat, refreshMins, tz};
+    CurrentConfig cfg{ssid, pass, crypto, fiat, refreshMins, tz, displayMode};
 
     file.close();
 

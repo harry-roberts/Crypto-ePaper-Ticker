@@ -362,6 +362,8 @@ String WiFiManager::generateConfigJs(CurrentConfig cfg)
     configJs += cfg.refreshMins;
     configJs += "\", tz: \"";
     configJs += cfg.tz;
+    configJs += "\", display: \"";
+    configJs += cfg.displayMode;
     configJs += "\"};";
 
     // var wifis = ["WiFi 1","WiFi 2"];
