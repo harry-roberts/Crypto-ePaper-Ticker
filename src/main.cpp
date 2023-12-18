@@ -3,7 +3,6 @@
 
 #include "TickerCoordinator.h"
 
-#define ALERT_TIME_S  150
 #define BUTTON_PIN 39
 
 SET_LOOP_TASK_STACK_SIZE(16*1024);
@@ -45,15 +44,18 @@ void setup()
     log_i("Program started");
     log_i("MAC ID: %s", wifiMac.c_str());
 
-    // timer setup
-    alert_timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(alert_timer, &onTimer, true);
-    timerAlarmWrite(alert_timer, ALERT_TIME_S * constants::MicrosToSecondsFactor, true);
-    timerAlarmEnable(alert_timer); 
-
     pinMode(BUTTON_PIN, INPUT);
     bool shouldEnterConfig = !digitalRead(BUTTON_PIN); // high = not pressed, low = pressed
     log_d("should enter config = %d", shouldEnterConfig);
+
+    // timer setup
+    alert_timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(alert_timer, &onTimer, true);
+    if (shouldEnterConfig)
+        timerAlarmWrite(alert_timer, constants::ConfigAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
+    else
+        timerAlarmWrite(alert_timer, constants::NormalAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
+    timerAlarmEnable(alert_timer); 
 
     TickerCoordinator ticker(batPct, shouldEnterConfig);
     int refreshSeconds = ticker.run();
