@@ -718,11 +718,16 @@
             a.setAttribute("class", "autocomplete-items");
             this.parentNode.appendChild(a);
             for (i = 0; i < arr.length; i++) {
-                if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                let arrEnc = arr[i].replace(/&/g, "&amp;")
+                                   .replace(/</g, "&lt;")
+                                   .replace(/>/g, "&gt;")
+                                   .replace(/"/g, "&quot;")
+                                   .replace(/'/g, "&#39;");
+                if (arrEnc.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
                 b = document.createElement("DIV");
-                b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-                b.innerHTML += arr[i].substr(val.length);
-                b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                b.innerHTML = "<strong>" + arrEnc.substr(0, val.length) + "</strong>";
+                b.innerHTML += arrEnc.substr(val.length);
+                b.innerHTML += "<input type='hidden' value='" + arrEnc + "'>";
                     b.addEventListener("click", function(e) {
                     inp.value = this.getElementsByTagName("input")[0].value;
                     closeAllLists();
