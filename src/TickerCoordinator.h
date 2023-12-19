@@ -9,7 +9,7 @@
 class TickerCoordinator
 {
 public:
-    TickerCoordinator(int batPct, bool shouldEnterConfig);
+    TickerCoordinator(int batPct, bool shouldEnterConfig, hw_timer_t *alert_timer);
 
     int run();
 
@@ -17,6 +17,7 @@ private:
     DisplayManager m_displayManager;
     WiFiManager m_wifiManager;
     CurrentConfig m_cfg;
+    hw_timer_t* m_alertTimer;
 
     int m_refreshSeconds = 300;
     int m_batPct;

@@ -2,9 +2,10 @@
 
 #include "Constants.h"
 
-TickerCoordinator::TickerCoordinator(int batPct, bool shouldEnterConfig) :
+TickerCoordinator::TickerCoordinator(int batPct, bool shouldEnterConfig, hw_timer_t *alert_timer) :
     m_batPct(batPct),
-    m_shouldEnterConfig(shouldEnterConfig)
+    m_shouldEnterConfig(shouldEnterConfig),
+    m_alertTimer(alert_timer)
 {
 }
 
@@ -16,13 +17,27 @@ int TickerCoordinator::run()
         utils::ticker_hibernate();
     }
 
-    bool hasConfig = false;
-    m_cfg = utils::readConfig(hasConfig);
+    utils::ConfigState cfgState = utils::readConfig(m_cfg);
 
-    if (m_shouldEnterConfig || !hasConfig)
+    if (m_shouldEnterConfig)
+    {
+        m_displayManager.writeGenericText("Starting config mode...");
         enterConfigMode();
+    }
+    else if (cfgState == utils::ConfigState::CONFIG_FAIL)
+    {
+        m_displayManager.writeGenericText("Error with given config\nRestarting in config mode");
+        enterConfigMode();
+    }
+    else if (cfgState == utils::ConfigState::CONFIG_NO_SSID)
+    {
+        m_displayManager.writeGenericText("SSID is required\nRestarting in config mode");
+        enterConfigMode();
+    }
     else
+    {
         enterNormalMode();
+    }
 
     m_displayManager.hibernate();
     return m_refreshSeconds;
@@ -30,8 +45,9 @@ int TickerCoordinator::run()
 
 void TickerCoordinator::enterConfigMode()
 {
+    timerAlarmWrite(m_alertTimer, constants::ConfigAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
+    timerAlarmEnable(m_alertTimer);
     log_d("Creating access point for config");
-    m_displayManager.writeGenericText("Starting config mode...");
     m_wifiManager.initConfigMode(m_cfg, 80);
     m_displayManager.drawAccessPoint(m_wifiManager.getAPIP());
 
@@ -42,6 +58,8 @@ void TickerCoordinator::enterConfigMode()
 
 void TickerCoordinator::enterNormalMode()
 {
+    timerAlarmWrite(m_alertTimer, constants::NormalAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
+    timerAlarmEnable(m_alertTimer);
     m_refreshSeconds = m_cfg.refreshMins.toInt() * 60;
 
     // in case of some kind of error - don't want this null

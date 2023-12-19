@@ -19,6 +19,7 @@ DisplayManagerImpl::DisplayManagerImpl(int rotation) :
 {
     m_display.init(115200, true, 2, false);
     m_display.setRotation(rotation);
+    m_display.setTextWrap(false);
 };
 
 void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
@@ -87,6 +88,7 @@ void DisplayManagerImpl::writeDisplaySimple(const String& crypto, const String& 
 
 void DisplayManagerImpl::writeGenericText(const String& textToWrite)
 {
+    m_display.setTextWrap(true); // only place where we should wrap text
     m_display.setFullWindow();
     m_display.firstPage();
     do
@@ -101,6 +103,7 @@ void DisplayManagerImpl::writeGenericText(const String& textToWrite)
 
     }
     while (m_display.nextPage());
+    m_display.setTextWrap(false);
 }
 void DisplayManagerImpl::hibernate()
 {
@@ -229,7 +232,6 @@ void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, 
         m_display.fillScreen(GxEPD_WHITE);
         m_display.setTextColor(GxEPD_BLACK);
 
-
         m_display.setFont(&FreeSans12pt7b);
         m_display.setCursor(3, 25);
         m_display.print(topMsg);
@@ -264,7 +266,6 @@ void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, 
 
     }
     while (m_display.nextPage());
-    
 }
 
 void DisplayManagerImpl::drawAccessPoint(const String& ip)

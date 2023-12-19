@@ -90,7 +90,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
         m_server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
         {
             int params = request->params();
-            StaticJsonDocument<256> doc;
+            StaticJsonDocument<512> doc;
             for(int i = 0; i < params; i++)
             {
                 AsyncWebParameter* p = request->getParam(i);
@@ -113,15 +113,19 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
             if (doc.overflowed()) 
             {
                 log_w("Json overflowed - some values will be missing");
-                request->send(200, "text/plain", "Error: the config was too large and could not be saved. Restarting device");
+                request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">Error: the config was too large and could not be saved. Restarting device</h1>");
             }
             else if (serializeJson(doc, file) == 0) 
             {
                 log_w("Failed to write config to file");
-                request->send(200, "text/plain", "An error occurred, the config was not saved. Restarting device");
+                request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">An error occurred, the config was not saved. Restarting device</h1>");
+            }
+            else if (doc[constants::ConfigKeySsid].isNull())
+            {
+                request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">No SSID given. Restarting device in config mode.</h1>");
             }
             else
-                request->send(200, "text/plain", "Done. Restarting device");
+                request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">Config saved successfully. Restarting device.</h1>");
         
             file.close();
 
