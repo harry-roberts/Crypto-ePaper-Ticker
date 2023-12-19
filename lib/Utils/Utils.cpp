@@ -105,22 +105,23 @@ String getDeviceID()
     return String(macStr);
 }
 
-CurrentConfig readConfig(bool& success)
+ConfigState readConfig(CurrentConfig& cfg)
 {
     // read config from spiffs
     if (!utils::initSpiffs())
     {
         log_w("Could not init spiffs");
-        return CurrentConfig();
+        return ConfigState::CONFIG_FAIL;
     }
 
     File file = SPIFFS.open("/config.json");
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, file);
+    file.close();
     if (error)
     {
         log_w("Couldn't read config");
-        return CurrentConfig();
+        return ConfigState::CONFIG_FAIL;
     }
 
     String ssid = doc[constants::ConfigKeySsid];
@@ -135,13 +136,18 @@ CurrentConfig readConfig(bool& success)
     log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s", 
             ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str());
 
-    CurrentConfig cfg{ssid, pass, crypto, fiat, refreshMins, tz, displayMode};
+    cfg = CurrentConfig{ssid, pass, crypto, fiat, refreshMins, tz, displayMode};
 
-    file.close();
+    if (cfg.ssid.isEmpty()) // password allowed to be blank, others have defaults in html. Could enforce this in html instead 
+        return ConfigState::CONFIG_NO_SSID;
 
-    if (!ssid.isEmpty()) // password allowed to be blank, others have defaults in html 
-        success = true;
-    return cfg;
+    if (!cfg.crypto.isEmpty() && !cfg.fiat.isEmpty() && !cfg.tz.isEmpty() 
+        && !cfg.refreshMins.isEmpty() && !cfg.displayMode.isEmpty())
+    {
+        return ConfigState::CONFIG_OK;
+    }
+
+    return ConfigState::CONFIG_FAIL;    
 }
 
 }

@@ -19,6 +19,13 @@ struct CurrentConfig
     String displayMode;
 };
 
+enum class ConfigState
+{
+    CONFIG_OK,       // the config was read successfully
+    CONFIG_NO_SSID,  // ssid was missing, should be only value that is possible as blank
+    CONFIG_FAIL      // something failed, couldn't read config
+};
+
 float raw_voltage();
 float convert_voltage_reading(float volt);
 float battery_read();
@@ -31,7 +38,7 @@ bool initSpiffs(bool formatOnFail = true);
 
 String getDeviceID();
 
-CurrentConfig readConfig(bool& success);
+ConfigState readConfig(CurrentConfig& cfg);
 
 }
 

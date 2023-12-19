@@ -50,14 +50,9 @@ void setup()
 
     // timer setup
     alert_timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(alert_timer, &onTimer, true);
-    if (shouldEnterConfig)
-        timerAlarmWrite(alert_timer, constants::ConfigAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
-    else
-        timerAlarmWrite(alert_timer, constants::NormalAlertTimeSeconds * constants::MicrosToSecondsFactor, true);
-    timerAlarmEnable(alert_timer); 
+    timerAttachInterrupt(alert_timer, &onTimer, true); 
 
-    TickerCoordinator ticker(batPct, shouldEnterConfig);
+    TickerCoordinator ticker(batPct, shouldEnterConfig, alert_timer);
     int refreshSeconds = ticker.run();
 
     log_i("Program awake time: %d", millis() - startTime);
