@@ -73,6 +73,7 @@ void ticker_hibernate()
     // shouldn't be the case but just in case this is enabled
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
 
+    log_d("Hibernating forever");
     // will sleep in lowest power forever
     esp_deep_sleep_start(); 
 }
@@ -114,7 +115,7 @@ ConfigState readConfig(CurrentConfig& cfg)
         return ConfigState::CONFIG_FAIL;
     }
 
-    File file = SPIFFS.open("/config.json");
+    File file = SPIFFS.open(constants::SpiffsConfigFileName);
     StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, file);
     file.close();

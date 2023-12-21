@@ -34,6 +34,9 @@ namespace constants
 
     inline constexpr const int NormalAlertTimeSeconds = 150;
     inline constexpr const int ConfigAlertTimeSeconds = 600;
+
+    inline constexpr const char* SpiffsConfigFileName = "/config.json";
+    inline constexpr const char* SpiffsBatLogFileName = "/low_battery.txt";
 }
 
 #endif
