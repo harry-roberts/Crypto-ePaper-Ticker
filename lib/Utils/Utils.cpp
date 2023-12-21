@@ -124,14 +124,14 @@ ConfigState readConfig(CurrentConfig& cfg)
         return ConfigState::CONFIG_FAIL;
     }
 
-    String ssid = doc[constants::ConfigKeySsid];
-    String pass = doc[constants::ConfigKeyPassword];
-    String crypto = doc[constants::ConfigKeyCrypto];
-    String fiat = doc[constants::ConfigKeyFiat];
-    String refreshMins = doc[constants::ConfigKeyRefreshMins];
-    String tz = doc[constants::ConfigKeyTimezone];
-    String displayMode = doc[constants::ConfigKeyDisplayMode];
-    int refreshSeconds = refreshMins.toInt() * 60;
+    // ArduinoJSON will set an actual string value of "null" if key is empty, so check for it and set our own empty string
+    String ssid = doc[constants::ConfigKeySsid].isNull() ? String() : doc[constants::ConfigKeySsid];
+    String pass = doc[constants::ConfigKeyPassword].isNull() ? String() : doc[constants::ConfigKeyPassword];
+    String crypto = doc[constants::ConfigKeyCrypto].isNull() ? String() : doc[constants::ConfigKeyCrypto];
+    String fiat = doc[constants::ConfigKeyFiat].isNull() ? String() : doc[constants::ConfigKeyFiat];
+    String refreshMins = doc[constants::ConfigKeyRefreshMins].isNull() ? String() : doc[constants::ConfigKeyRefreshMins];
+    String tz = doc[constants::ConfigKeyTimezone].isNull() ? String() : doc[constants::ConfigKeyTimezone];;
+    String displayMode = doc[constants::ConfigKeyDisplayMode].isNull() ? String() : doc[constants::ConfigKeyDisplayMode];
 
     log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s", 
             ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str());
