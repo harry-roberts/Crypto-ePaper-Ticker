@@ -236,12 +236,15 @@ void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, 
         m_display.setCursor(3, 25);
         m_display.print(topMsg);
 
-        // write device id in corner
-        m_display.setFont(&FreeMono9pt7b);
-        m_display.setCursor(160, 25);
-        m_display.print("(");
-        m_display.print(utils::getDeviceID());
-        m_display.print(")");
+        // write version number in corner
+        m_display.setFont(&FreeSans9pt7b);
+        String versionString = "V";
+        versionString += constants::VersionNumber;
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        m_display.getTextBounds(versionString, 0, 0, &tbx, &tby, &tbw, &tbh);
+        m_display.setCursor(m_max_x - tbw - 10, 25);
+        m_display.print("V");
+        m_display.print(constants::VersionNumber);
 
         m_display.writeLine(0,       32,
                             m_max_x, 32,
