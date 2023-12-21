@@ -1,6 +1,7 @@
 #include "TickerCoordinator.h"
-
 #include "Constants.h"
+
+#include "SPIFFS.h"
 
 TickerCoordinator::TickerCoordinator(int batPct, bool shouldEnterConfig, hw_timer_t *alert_timer) :
     m_batPct(batPct),
@@ -11,11 +12,51 @@ TickerCoordinator::TickerCoordinator(int batPct, bool shouldEnterConfig, hw_time
 
 int TickerCoordinator::run()
 {
+    utils::initSpiffs();
+
     if (m_batPct < 10)
     {
-        m_displayManager.drawLowBattery();
+        log_d("battery is below minimum needed");
+        bool hasWrittenLowBatWarning = false;
+
+        // read the file and update hasWrittenLowBatWarning if needed
+        File file = SPIFFS.open(constants::SpiffsBatLogFileName, FILE_READ);
+        if (!file)
+        {
+            log_d("cannot open battery log file");
+        }
+        else
+        {
+            log_d("reading low battery log");
+            String batLogFile = file.readString();
+            if (batLogFile == "1")
+                hasWrittenLowBatWarning = true;
+        }
+        file.close();
+
+        if (hasWrittenLowBatWarning) // no need to write to display again
+            log_d("already drawn display with low battery, will hibernate");
+        else
+        {
+            // update display and write to the file that it has now been updated
+            m_displayManager.drawLowBattery();
+            File file = SPIFFS.open(constants::SpiffsBatLogFileName, FILE_WRITE);
+            if (!file)
+                log_w("m_batPct < 10, hasWrittenLowBatWarning = false, and failed to open battery log file");
+            else
+            {
+                log_d("writing to low battery log");
+                file.print("1");
+                file.close();
+            }
+        }
+        // display has been updated if needed, log file written if needed, now sleep forever
         utils::ticker_hibernate();
     }
+
+    // battery is ok if we get here, just remove the file
+    log_d("battery is ok, removing log file if it exists");
+    SPIFFS.remove(constants::SpiffsBatLogFileName);
 
     utils::ConfigState cfgState = utils::readConfig(m_cfg);
 

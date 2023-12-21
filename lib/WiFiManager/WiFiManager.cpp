@@ -103,7 +103,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
                 }
             }
 
-            File file = SPIFFS.open("/config.json", FILE_WRITE);
+            File file = SPIFFS.open(constants::SpiffsConfigFileName, FILE_WRITE);
             if (!file)
             {
                 log_w("failed to open config file for writing");
