@@ -27,7 +27,8 @@ namespace constants
     inline constexpr const int MicrosToSecondsFactor = 1000000;
 
     inline constexpr const int SleepSecondsAfterDataFail = 300;
-    inline constexpr const int SleepSecondsAfterWiFiFail = 600;
+    inline constexpr const int SleepSecondsAfterWiFiFailLevels = 6;
+    inline constexpr const int SleepSecondsAfterWiFiFail[SleepSecondsAfterWiFiFailLevels] = {60, 120, 300, 600, 1800, 3600};
 
     inline constexpr const int NormalAlertTimeSeconds = 150;
     inline constexpr const int ConfigAlertTimeSeconds = 600;

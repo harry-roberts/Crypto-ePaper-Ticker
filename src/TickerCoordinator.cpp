@@ -3,14 +3,17 @@
 
 #include "SPIFFS.h"
 
-TickerCoordinator::TickerCoordinator(int batPct, bool shouldEnterConfig, hw_timer_t *alert_timer) :
-    m_batPct(batPct),
-    m_shouldEnterConfig(shouldEnterConfig),
-    m_alertTimer(alert_timer)
+TickerCoordinator::TickerCoordinator(TickerInput input) :
+    m_batPct(input.batPercent),
+    m_shouldEnterConfig(input.shouldEnterConfig),
+    m_numWifiFailures(input.numConsecutiveWifiFails),
+    m_alertTimer(input.alert_timer)
 {
+    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, numConsecutiveWifiFails=%d", 
+           m_batPct, m_shouldEnterConfig, m_numWifiFailures);
 }
 
-int TickerCoordinator::run()
+TickerOutput TickerCoordinator::run()
 {
     utils::initSpiffs();
 
@@ -81,7 +84,18 @@ int TickerCoordinator::run()
     }
 
     m_displayManager.hibernate();
-    return m_refreshSeconds;
+
+    if (m_wifiFailed)
+    {
+        m_numWifiFailures++;
+        log_d("Consecutive WiFi connection failure number %d", m_numWifiFailures);
+        int failLevel = min(m_numWifiFailures, constants::SleepSecondsAfterWiFiFailLevels);
+        m_refreshSeconds = constants::SleepSecondsAfterWiFiFail[failLevel-1];
+        log_d("Set sleep time to %d", m_refreshSeconds);
+    }
+
+    TickerOutput output{m_refreshSeconds, m_wifiFailed};
+    return output;
 }
 
 void TickerCoordinator::enterConfigMode()
@@ -120,9 +134,11 @@ void TickerCoordinator::enterNormalMode()
     m_wifiManager.initNormalMode(m_cfg);
     if (!checkWifi())
     {
-        m_refreshSeconds = constants::SleepSecondsAfterWiFiFail;
+        m_wifiFailed = true;
         return;
     }
+    else
+        m_wifiFailed = false;
 
     std::set<long> unixOffsets;
     if (m_cfg.displayMode == constants::ConfigDisplayModeSimple)

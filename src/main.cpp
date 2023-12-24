@@ -3,11 +3,19 @@
 
 #include "TickerCoordinator.h"
 
+/*
+#include "SDLogger.h"
+#include <ESP32Time.h>
+ESP32Time rtc(0);
+DisplayManager dm;
+*/
+
 #define BUTTON_PIN 39
 
 SET_LOOP_TASK_STACK_SIZE(16*1024);
 
 RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR int wifiFails = 0;
 
 hw_timer_t *alert_timer = NULL;
 
@@ -31,18 +39,19 @@ void IRAM_ATTR onTimer()
 
 void setup() 
 {
+    Serial.begin(115200); 
     // must get battery as first thing
     int batPct = utils::battery_percent(utils::battery_read());
     ++bootCount;
 
     uint32_t startTime = millis();
-    Serial.begin(115200);
     delay(200);
     
     String wifiMac = utils::getDeviceID();
 
     log_i("Program started");
     log_i("MAC ID: %s", wifiMac.c_str());
+    log_i("Firmware version: %s", constants::VersionNumber);
 
     pinMode(BUTTON_PIN, INPUT);
     bool shouldEnterConfig = !digitalRead(BUTTON_PIN); // high = not pressed, low = pressed
@@ -52,14 +61,47 @@ void setup()
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true); 
 
-    TickerCoordinator ticker(batPct, shouldEnterConfig, alert_timer);
-    int refreshSeconds = ticker.run();
+    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, alert_timer};
+
+    TickerCoordinator ticker(tickerInput);
+
+    TickerOutput tickerOutput = ticker.run();
+
+    if (tickerOutput.wifiFailed)
+        wifiFails++;
+    else
+        wifiFails = 0;
 
     log_i("Program awake time: %d", millis() - startTime);
     // start deep sleep
-    log_d("Starting deep sleep for %d seconds", refreshSeconds);
+    log_d("Starting deep sleep for %d seconds", tickerOutput.refreshSeconds);
     Serial.flush();
-    utils::ticker_deep_sleep(refreshSeconds * constants::MicrosToSecondsFactor);
+    utils::ticker_deep_sleep(tickerOutput.refreshSeconds * constants::MicrosToSecondsFactor);
+
+    
+
+   //rtc.setTime(1609459200); // Jan 1st 2021 00:00
 }
 
-void loop() {}
+void loop() {
+    /*
+    // battery log sketch
+    float batRead = utils::battery_read();
+    if (utils::battery_percent(batRead) < 5)
+    {
+        dm.drawLowBattery();
+        utils::ticker_hibernate();
+    }
+    SDLogger sd;
+
+    String entry = rtc.getTime("%B %d %Y %H:%M:%S");
+    entry += ",";
+    entry += String(batRead, 3);
+    entry += "\n";
+    sd.appendFile("/bat_test.txt", entry);
+
+    dm.writeGenericText(entry);
+
+    delay(60000);
+    */
+}
