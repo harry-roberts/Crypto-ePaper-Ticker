@@ -9,9 +9,6 @@ namespace constants
     inline constexpr const long SecondsOneMonth = 2592000;
     inline constexpr const long SecondsOneYear = 31536000;
 
-    inline constexpr const float BatteryMaxVoltage = 4.15;
-    inline constexpr const float BatteryMinVoltage = 3.4;
-
     inline constexpr const char* WifiAccessPointName = "Ticker";
 
     inline constexpr const char* ConfigKeySsid = "s";
