@@ -9,16 +9,17 @@ namespace utils
 float raw_voltage()
 {
     // ESP32 ADC is notoriously spiky
-    // take 10 readings and average
+    // take 20 readings and average
     pinMode(35, INPUT);
-    uint16_t reading = 0;
-    for (int i = 0; i < 10; i++)
+    uint32_t reading = 0;
+    for (int i = 0; i < 20; i++)
     {
         reading += analogRead(35);
-        delay(5);
+        delay(10);
     }
-    float avg = reading / 10;
-    float reading_voltage = (avg / 4095) * 3.3;
+    float avg = reading / 20;
+    float reading_voltage = (avg / 4095) * 3.3; // max adc in is 3.3v
+    log_d("Battery: reading_voltage=%f", reading_voltage);
     return reading_voltage;
 }
 
@@ -30,15 +31,19 @@ float convert_voltage_reading(float volt)
 
 float correct_battery_voltage(float volt)
 {
+    float rtn;
     #if TTGO_BOARD_VERSION == 1
     // experimentally found this offset
     // see images/voltage_correction_2.3.1.png
-    return ((volt*0.988) + 0.354);
+    rtn = ((volt*0.988) + 0.354);
     #elif TTGO_BOARD_VERSION == 2
-    return ((volt*1.03) + 0.267);
+    rtn = ((volt*1.03) + 0.267);
     #else
-    return volt;
+    rtn = volt;
     #endif
+
+    log_d("Battery: correct_battery_voltage=%f", rtn);
+    return rtn;
 
 }
 
@@ -49,17 +54,38 @@ float battery_read()
 
 int battery_percent(float volt)
 {
-    using constants::BatteryMinVoltage;
-    using constants::BatteryMaxVoltage;
-    float inVolt = volt;
+    // expermentally found by discharging at constant load and logging voltage readings over time
+    // mapped here so that index of array = percentage value
+    // minimum was 3.43V before stopping, calling this 5%
+    float voltToPercent[101] = {3.4,3.4,3.4,3.4,3.4,3.43,3.45,3.462,3.474,3.486,3.493,3.503,3.512,3.521,3.531,3.537,3.543,3.552,3.561,
+                                3.57,3.578,3.585,3.588,3.593,3.599,3.607,3.615,3.626,3.633,3.639,3.642,3.648,3.655,3.661,3.666,3.671,
+                                3.676,3.683,3.688,3.691,3.697,3.701,3.706,3.712,3.717,3.72,3.725,3.728,3.731,3.736,3.741,3.743,3.746,
+                                3.751,3.757,3.762,3.767,3.771,3.776,3.782,3.787,3.79,3.793,3.796,3.801,3.805,3.811,3.817,3.822,3.827,
+                                3.834,3.839,3.843,3.848,3.854,3.862,3.87,3.875,3.883,3.89,3.895,3.899,3.903,3.908,3.916,3.921,3.93,
+                                3.937,3.945,3.95,3.958,3.969,3.978,3.988,3.996,4.004,4.02,4.031,4.047,4.071,4.11};
 
-    if (inVolt < BatteryMinVoltage)
-        inVolt = BatteryMinVoltage;
-    if (inVolt > BatteryMaxVoltage)
-        inVolt = BatteryMaxVoltage;
+    // save the iterating in these cases
+    if (volt <= 3.4)
+        return 0;
+    if (volt >= 4.11)
+        return 100;
 
-    float pct = ( (inVolt - BatteryMinVoltage) / (BatteryMaxVoltage - BatteryMinVoltage) ) * 100;
-    return (int)pct;
+    // iterate the voltToPercent array and find the closest match
+    float smallestDiff = abs(volt - voltToPercent[0]);
+    int percent = 0;
+    for (int i = 1; i <= 100; i++)
+    {
+        float diff = abs(volt - voltToPercent[i]);
+        if (diff < smallestDiff)
+        {
+            smallestDiff = diff;
+            percent = i;
+        }
+    }
+
+    log_d("Battery: voltage=%f, percent=%d", volt, percent);
+
+    return percent;
 }
 
 void ticker_hibernate()
