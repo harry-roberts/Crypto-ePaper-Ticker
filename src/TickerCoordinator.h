@@ -6,12 +6,26 @@
 #include "WiFiManager.h"
 #include "Utils.h"
 
+struct TickerInput
+{
+    int batPercent;
+    bool shouldEnterConfig;
+    int numConsecutiveWifiFails;
+    hw_timer_t *alert_timer;
+};
+
+struct TickerOutput
+{
+    int refreshSeconds;
+    bool wifiFailed;
+};
+
 class TickerCoordinator
 {
 public:
-    TickerCoordinator(int batPct, bool shouldEnterConfig, hw_timer_t *alert_timer);
+    TickerCoordinator(TickerInput input);
 
-    int run();
+    TickerOutput run();
 
 private:
     DisplayManager m_displayManager;
@@ -23,6 +37,8 @@ private:
     int m_batPct;
     bool m_shouldEnterConfig;
     bool m_initial;
+    int m_numWifiFailures;
+    bool m_wifiFailed = true;
 
     void enterConfigMode();
     void enterNormalMode();
