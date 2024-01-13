@@ -350,7 +350,7 @@ String WiFiManager::getUrlContent(const String& server, const String& url)
     return "";
 }
 
-String WiFiManager::generateConfigJs(CurrentConfig cfg)
+String WiFiManager::generateConfigJs(const CurrentConfig& cfg)
 {
     // creates a String containing a JavaScript struct of the given config, to be served with the config html 
     // to pre-populate inputs with the current values

@@ -9,7 +9,7 @@ DisplayManager::DisplayManager() :
 DisplayManager::~DisplayManager() = default;
 
 void DisplayManager::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                                  const String& time, int batteryPercent)
+                                  const String& time, const int batteryPercent)
 {    
     m_impl->writeDisplay(crypto, fiat, priceData, dayMonth, time, batteryPercent);
 }
@@ -46,7 +46,7 @@ void DisplayManager::drawYesWifiNoCrypto(const String& dayMonth, const String& t
 }
 
 void DisplayManager::drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
-                                int refreshInterval)
+                                const int refreshInterval)
 {
     m_impl->drawConfig(ssid, password, crypto, fiat, refreshInterval);
 }

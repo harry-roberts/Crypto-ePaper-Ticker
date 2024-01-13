@@ -23,7 +23,7 @@ struct TickerOutput
 class TickerCoordinator
 {
 public:
-    TickerCoordinator(TickerInput input);
+    TickerCoordinator(const TickerInput& input);
 
     TickerOutput run();
 

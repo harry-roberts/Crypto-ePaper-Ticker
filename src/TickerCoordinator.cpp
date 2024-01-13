@@ -3,7 +3,7 @@
 
 #include "SPIFFS.h"
 
-TickerCoordinator::TickerCoordinator(TickerInput input) :
+TickerCoordinator::TickerCoordinator(const TickerInput& input) :
     m_batPct(input.batPercent),
     m_shouldEnterConfig(input.shouldEnterConfig),
     m_numWifiFailures(input.numConsecutiveWifiFails),

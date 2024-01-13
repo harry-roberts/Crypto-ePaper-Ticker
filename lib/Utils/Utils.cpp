@@ -23,7 +23,7 @@ float raw_voltage()
     return reading_voltage;
 }
 
-float convert_voltage_reading(float volt)
+float convert_voltage_reading(const float volt)
 {
     // schematic says voltage divider is two 100k resistors
     return 2 * volt;
@@ -52,7 +52,7 @@ float battery_read()
     return correct_battery_voltage(convert_voltage_reading(raw_voltage()));
 }
 
-int battery_percent(float volt)
+int battery_percent(const float volt)
 {
     // expermentally found by discharging at constant load and logging voltage readings over time
     // mapped here so that index of array = percentage value
@@ -104,7 +104,7 @@ void ticker_hibernate()
     esp_deep_sleep_start(); 
 }
 
-void ticker_deep_sleep(uint64_t time)
+void ticker_deep_sleep(const uint64_t time)
 {
     // normal deep sleep for time period, rtc memory stays active
     esp_sleep_enable_timer_wakeup(time);
@@ -112,7 +112,7 @@ void ticker_deep_sleep(uint64_t time)
 }
 
 // could go in specific lib
-bool initSpiffs(bool formatOnFail)
+bool initSpiffs(const bool formatOnFail)
 {
     if (!SPIFFS.begin(formatOnFail))
     {

@@ -14,7 +14,7 @@ public:
     ~DisplayManager();
 
     void writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                      const String& time, int batteryPercent);
+                      const String& time, const int batteryPercent);
     void writeGenericText(const String& textToWrite);
     void hibernate();
 
@@ -23,7 +23,7 @@ public:
     void drawLowBattery();
     void drawYesWifiNoCrypto(const String& dayMonth, const String& time);
     void drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
-                    int refreshInterval);
+                    const int refreshInterval);
     void drawAccessPoint(const String& ip);
 
 private:

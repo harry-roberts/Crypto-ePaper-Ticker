@@ -50,7 +50,7 @@ private:
     bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out, const RequestBasePtr& request);
     bool getTime(tm& timeinfo);
     void setTimeVars(tm& timeinfo);
-    String generateConfigJs(CurrentConfig cfg);
+    String generateConfigJs(const CurrentConfig& cfg);
 
     String m_ssid;
     String m_password;

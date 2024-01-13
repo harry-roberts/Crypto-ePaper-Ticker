@@ -23,7 +23,7 @@ DisplayManagerImpl::DisplayManagerImpl(int rotation) :
 };
 
 void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                                      const String& time, int batteryPercent)
+                                      const String& time, const int batteryPercent)
 {
     if (priceData.size() == 2 && priceData[0] != 0 && priceData[constants::SecondsOneDay] != 0)
     {
@@ -43,7 +43,7 @@ void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, 
 }
 
 void DisplayManagerImpl::writeDisplayAdvanced(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                                              const String& time, int batteryPercent)
+                                              const String& time, const int batteryPercent)
 {
     setCryptoBoxWidth(crypto, dayMonth, time);
 
@@ -68,7 +68,7 @@ void DisplayManagerImpl::writeDisplayAdvanced(const String& crypto, const String
 }
 
 void DisplayManagerImpl::writeDisplaySimple(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                                            const String& time, int batteryPercent)
+                                            const String& time, const int batteryPercent)
 {
     setCryptoBoxWidth(crypto, dayMonth, time, true);
 
@@ -222,7 +222,7 @@ void DisplayManagerImpl::drawYesWifiNoCrypto(const String& dayMonth, const Strin
 }
 
 void DisplayManagerImpl::drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
-                                    int refreshInterval)
+                                    const int refreshInterval)
 {
     const String topMsg = "Starting Ticker";
     m_display.setFullWindow();
@@ -373,7 +373,7 @@ void DisplayManagerImpl::writeMainPriceSimple(const String& price)
     m_display.print(price);
 }
 
-void DisplayManagerImpl::writeCrypto(const String& crypto, bool centre)
+void DisplayManagerImpl::writeCrypto(const String& crypto, const bool centre)
 {
     m_display.setFont(m_current_crypto_box_font);
     m_display.setTextColor(GxEPD_WHITE);
@@ -449,7 +449,7 @@ void DisplayManagerImpl::writeDateTimeSimple(const String& dayMonth, const Strin
     m_display.print(time);
 }
 
-void DisplayManagerImpl::writeBattery(int batPct)
+void DisplayManagerImpl::writeBattery(const int batPct)
 {
     // write number
     m_display.setFont(&Org_01);
@@ -476,7 +476,8 @@ void DisplayManagerImpl::writeBattery(int batPct)
                     GxEPD_BLACK);
 }
 
-bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset, bool centre)
+bool DisplayManagerImpl::writePriceChange(const float mainPrice, const float priceToCompare, const String& timeframe, 
+                                          const int yOffset, const bool centre)
 {
     if (centre)
         m_display.setFont(&FreeSansBold12pt7b);
@@ -504,7 +505,7 @@ bool DisplayManagerImpl::writePriceChange(float mainPrice, float priceToCompare,
     return percentChange >= 0;
 }
 
-void DisplayManagerImpl::drawArrow(bool isPositive)
+void DisplayManagerImpl::drawArrow(const bool isPositive)
 {
     uint16_t midPointX = m_crypto_box_x2 / 2;
     if (isPositive)
@@ -594,7 +595,7 @@ void DisplayManagerImpl::setCryptoBoxWidth(const String& crypto, const String& d
         m_crypto_box_x2 = maxWidth;
 }
 
-String DisplayManagerImpl::formatPriceString(float price)
+String DisplayManagerImpl::formatPriceString(const float price)
 {
     // crypto price can be anything from <1 to >10k
     // we want to write something neat like "12,345" or "0.1234"
@@ -652,7 +653,7 @@ String DisplayManagerImpl::formatPriceChangeString(float percentChange, const St
     return changeLine;
 }
 
-void DisplayManagerImpl::formatCommas(char *buf, int price)
+void DisplayManagerImpl::formatCommas(char *buf, const int price)
 {
     // recursively call dividing by 1000 until we get here to write the first digit(s) before first comma
     if (price < 1000) {

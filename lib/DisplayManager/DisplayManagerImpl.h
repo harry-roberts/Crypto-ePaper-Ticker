@@ -18,7 +18,7 @@ public:
     DisplayManagerImpl(int rotation = 1);
 
     void writeDisplay(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                      const String& time, int batteryPercent);
+                      const String& time, const int batteryPercent);
 
     void writeGenericText(const String& textToWrite);
     void hibernate();
@@ -28,7 +28,7 @@ public:
     void drawLowBattery();
     void drawYesWifiNoCrypto(const String& dayMonth, const String& time);
     void drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
-                    int refreshInterval);
+                    const int refreshInterval);
     void drawAccessPoint(const String& ip);
 
 private:
@@ -36,26 +36,27 @@ private:
     friend class ::DisplayManagerTest_formatPriceChange_Test;
 
     void writeDisplayAdvanced(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                              const String& time, int batteryPercent);
+                              const String& time, const int batteryPercent);
     void writeDisplaySimple(const String& crypto, const String& fiat, std::map<long, float>& priceData, const String& dayMonth, 
-                            const String& time, int batteryPercent);
+                            const String& time, const int batteryPercent);
 
     void addLines();
     void fillCryptoBox(bool centre = false);
     void writeMainPriceAdvanced(const String& price);
     void writeMainPriceSimple(const String& price);
-    void writeCrypto(const String& crypto, bool centre = false);
+    void writeCrypto(const String& crypto, const bool centre = false);
     void writeDateTimeAdvanced(const String& dayMonth, const String& time);
     void writeDateTimeSimple(const String& dayMonth, const String& time);
-    void writeBattery(int batPct);
-    bool writePriceChange(float mainPrice, float priceToCompare, const String& timeframe, int yOffset, bool centre = false);
+    void writeBattery(const int batPct);
+    bool writePriceChange(const float mainPrice, const float priceToCompare, const String& timeframe, const int yOffset, 
+                          const bool centre = false);
 
-    void drawArrow(bool isPositive);
+    void drawArrow(const bool isPositive);
 
     void setCryptoBoxWidth(const String& crypto, const String& dayMonth, const String& time, bool centre = false);
-    String formatPriceString(float price);
+    String formatPriceString(const float price);
     String formatPriceChangeString(float percentChange, const String& timeframe);
-    void formatCommas(char *buf, int price);
+    void formatCommas(char *buf, const int price);
 
     GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> m_display;
 

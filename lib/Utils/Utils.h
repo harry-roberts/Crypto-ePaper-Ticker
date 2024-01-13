@@ -27,14 +27,14 @@ enum class ConfigState
 };
 
 float raw_voltage();
-float convert_voltage_reading(float volt);
+float convert_voltage_reading(const float volt);
 float battery_read();
-int battery_percent(float volt);
+int battery_percent(const float volt);
 
 void ticker_hibernate();
-void ticker_deep_sleep(uint64_t time);
+void ticker_deep_sleep(const uint64_t time);
 
-bool initSpiffs(bool formatOnFail = true);
+bool initSpiffs(const bool formatOnFail = true);
 
 String getDeviceID();
 
