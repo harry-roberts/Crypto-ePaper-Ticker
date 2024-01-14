@@ -124,8 +124,8 @@ void TickerCoordinator::enterNormalMode()
         m_cfg.refreshMins = String(m_refreshSeconds);
     }
 
-    log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s", 
-           m_cfg.ssid, m_cfg.pass, m_cfg.crypto, m_cfg.fiat, m_cfg.refreshMins, m_cfg.tz.c_str());
+    log_d("Using config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, timezone=%s, is24Hour=%d", 
+           m_cfg.ssid, m_cfg.pass, m_cfg.crypto, m_cfg.fiat, m_cfg.refreshMins, m_cfg.tz.c_str(), m_cfg.is24Hour);
 
     // don't draw the config if it is part of an expected deep sleep timer wakeup
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_TIMER)

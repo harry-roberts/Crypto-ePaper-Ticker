@@ -17,6 +17,7 @@ struct CurrentConfig
     String refreshMins;
     String tz;
     String displayMode;
+    bool is24Hour;
 };
 
 enum class ConfigState

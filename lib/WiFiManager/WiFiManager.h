@@ -60,8 +60,9 @@ private:
     std::set<String> m_scannedSsids;
 
     String m_dayMonth = "Error"; // e.g. "12 Oct"
-    String m_time = "";          // e.g. "12:34" 
+    String m_time = "";          // e.g. "12:34" or "01:23pm"
     time_t m_epoch = -1;         // unix seconds
+    bool m_is24Hour = true;
 
     WiFiClientSecure m_client;
     std::unique_ptr<AsyncWebServer> m_server;

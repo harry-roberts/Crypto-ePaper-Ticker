@@ -10,6 +10,7 @@ void WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSourc
 {
     m_ssid = cfg.ssid;
     m_password = cfg.pass;
+    m_is24Hour = cfg.is24Hour;
     m_isAccessPoint = false;
     if (initAllDataSources)
         initAllAvailableDataSources();
@@ -167,8 +168,13 @@ void WiFiManager::setTimeVars(tm& timeinfo)
     }
     {
         char buf[20];
-        strftime(buf, 20, "%H:%M", &timeinfo);
+        if (m_is24Hour)
+            strftime(buf, 20, "%H:%M", &timeinfo);
+        else
+            strftime(buf, 20, "%I:%M%p", &timeinfo);
+
         m_time = String(buf);
+        m_time.toLowerCase();
     }
 
     time(&m_epoch);
@@ -368,6 +374,8 @@ String WiFiManager::generateConfigJs(const CurrentConfig& cfg)
     configJs += cfg.tz;
     configJs += "\", display: \"";
     configJs += cfg.displayMode;
+    configJs += "\", is24Hour: \"";
+    configJs += cfg.is24Hour;
     configJs += "\"};";
 
     // var wifis = ["WiFi 1","WiFi 2"];

@@ -18,6 +18,7 @@ namespace constants
     inline constexpr const char* ConfigKeyRefreshMins = "r";
     inline constexpr const char* ConfigKeyTimezone = "t";
     inline constexpr const char* ConfigKeyDisplayMode = "d";
+    inline constexpr const char* ConfigKeyTimeFormat = "o";
 
     inline constexpr const char* ConfigDisplayModeSimple = "simple";
     inline constexpr const char* ConfigDisplayModeAdvanced = "advanced";
