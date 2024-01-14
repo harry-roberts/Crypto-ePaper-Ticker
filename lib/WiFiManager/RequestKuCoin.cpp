@@ -10,6 +10,13 @@ String RequestKuCoin::getServer()
     return "api.kucoin.com";
 }
 
+bool RequestKuCoin::isValidRequest(const String& crypto, const String& fiat)
+{
+    // kucoin can only do USD
+    if (fiat != "USD") return false;
+    return true;
+}
+
 String RequestKuCoin::urlCurrentPrice(const String& crypto, const String& fiat)
 {
     String rtn;

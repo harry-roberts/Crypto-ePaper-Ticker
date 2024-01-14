@@ -257,17 +257,12 @@ std::map<long, float> WiFiManager::getPriceData(const String& crypto, const Stri
         // for each data source, try and get price for each given unix offset
         // if one fails, move on to next data source
 
-        // kucoin can only do USD for full data
-        if (request->getServer() == "api.kucoin.com" && fiat != "USD")
+        // make sure this crypto/fiat is allowed for the data source
+        if (!request->isValidRequest(crypto, fiat))
         {
-            log_d("Non USD fiat requested from KuCoin, moving to next source");
+            log_d("Crypto/fiat combo is not valid for this data source, moving on");
             continue;
-        }
-        if (request->getServer() == "api.binance.com" && fiat == "GBP")
-        {
-            log_d("GBP requested from Binance - no longer dealing");
-            continue;
-        }
+        } 
 
         bool fullSuccess = false;
         for (auto& [key, value] : successRtn)

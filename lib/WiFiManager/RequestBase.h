@@ -25,6 +25,11 @@ public:
     virtual bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) = 0;
     virtual bool priceAtTime(const String& content, float& priceAtTime_out) = 0;
 
+    // some sources will have restrictions on which cryptos/fiats are available
+    // crypto restrictions will be complex, probably just allow these requests to fail. Before making a crypto available,
+    // will just make sure it is available form at least 1 data source
+    virtual bool isValidRequest(const String& crypto, const String& fiat) = 0;
+
     // **Note** unix time between all functions should be consistent as SECONDS
 };
 
@@ -41,6 +46,8 @@ public:
 
     bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
     bool priceAtTime(const String& content, float& priceAtTime_out) override;
+
+    bool isValidRequest(const String& crypto, const String& fiat) override;
 };
 
 class RequestCoinGecko : public RequestBase
@@ -54,6 +61,8 @@ public:
 
     bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
     bool priceAtTime(const String& content, float& priceAtTime_out) override;
+
+    bool isValidRequest(const String& crypto, const String& fiat) override;
 };
 
 class RequestKuCoin : public RequestBase
@@ -67,6 +76,8 @@ public:
 
     bool currentPrice(const String& content, const String& crypto, const String& fiat, float& price_out) override;
     bool priceAtTime(const String& content, float& priceAtTime_out) override;
+
+    bool isValidRequest(const String& crypto, const String& fiat) override;
 };
 
 #endif

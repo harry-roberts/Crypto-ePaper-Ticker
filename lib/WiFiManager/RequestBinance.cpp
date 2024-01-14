@@ -10,6 +10,13 @@ String RequestBinance::getServer()
     return "api.binance.com";
 }
 
+bool RequestBinance::isValidRequest(const String& crypto, const String& fiat)
+{
+    // binance cannot do GBP
+    if (fiat == "GBP") return false;
+    return true;
+}
+
 String RequestBinance::urlCurrentPrice(const String& crypto, const String& fiat)
 {
     String rtn;

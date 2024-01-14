@@ -72,6 +72,14 @@ String RequestCoinGecko::getServer()
     return "api.coingecko.com";
 }
 
+bool RequestCoinGecko::isValidRequest(const String& crypto, const String& fiat)
+{
+    // no restrictions on coingecko
+    // really it can only do cryptos which have a mapped id in coinGeckoSymbolToId
+    // but shouldn't be possible to call one that isn't - html is using this same list
+    return true;
+}
+
 String RequestCoinGecko::urlCurrentPrice(const String& crypto, const String& fiat)
 {
     // {"bitcoin":{"gbp":33357.5612}}
