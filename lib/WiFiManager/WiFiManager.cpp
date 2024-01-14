@@ -263,6 +263,11 @@ std::map<long, float> WiFiManager::getPriceData(const String& crypto, const Stri
             log_d("Non USD fiat requested from KuCoin, moving to next source");
             continue;
         }
+        if (request->getServer() == "api.binance.com" && fiat == "GBP")
+        {
+            log_d("GBP requested from Binance - no longer dealing");
+            continue;
+        }
 
         bool fullSuccess = false;
         for (auto& [key, value] : successRtn)

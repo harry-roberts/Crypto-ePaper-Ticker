@@ -28,6 +28,10 @@ String RequestBinance::urlPriceAtTime(uint32_t currentUnix, uint32_t unixOffset,
     // can get the price by requesting a 1m kline between the current time and current time+60
     // should return just one bar https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data 
 
+    // **
+    // Binance has now stopped dealing GBP - can get current price but no longer usable for historic data
+    // **
+
     uint32_t startTime = currentUnix - unixOffset;
     String rtn;
     rtn.reserve(124); // expect it is 118 but allow a few extra in case of longer symbol
