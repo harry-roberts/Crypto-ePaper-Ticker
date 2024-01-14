@@ -16,6 +16,7 @@ SET_LOOP_TASK_STACK_SIZE(16*1024);
 
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int wifiFails = 0;
+RTC_DATA_ATTR int dataFails = 0;
 
 hw_timer_t *alert_timer = NULL;
 
@@ -61,7 +62,7 @@ void setup()
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true); 
 
-    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, alert_timer};
+    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, dataFails, alert_timer};
 
     TickerCoordinator ticker(tickerInput);
 
@@ -71,6 +72,11 @@ void setup()
         wifiFails++;
     else
         wifiFails = 0;
+
+    if (tickerOutput.dataFailed)
+        dataFails++;
+    else
+        dataFails = 0;
 
     log_i("Program awake time: %d", millis() - startTime);
     // start deep sleep

@@ -11,6 +11,7 @@ struct TickerInput
     int batPercent;
     bool shouldEnterConfig;
     int numConsecutiveWifiFails;
+    int numConsecutiveDataFails;
     hw_timer_t *alert_timer;
 };
 
@@ -18,6 +19,7 @@ struct TickerOutput
 {
     int refreshSeconds;
     bool wifiFailed;
+    bool dataFailed;
 };
 
 class TickerCoordinator
@@ -38,7 +40,9 @@ private:
     bool m_shouldEnterConfig;
     bool m_initial;
     int m_numWifiFailures;
+    int m_numDataFailures;
     bool m_wifiFailed = true;
+    bool m_dataFailed = false; // default false as don't want to mark it failed if wifi failed
 
     void enterConfigMode();
     void enterNormalMode();

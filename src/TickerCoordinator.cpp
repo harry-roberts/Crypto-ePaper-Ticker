@@ -7,10 +7,11 @@ TickerCoordinator::TickerCoordinator(const TickerInput& input) :
     m_batPct(input.batPercent),
     m_shouldEnterConfig(input.shouldEnterConfig),
     m_numWifiFailures(input.numConsecutiveWifiFails),
+    m_numDataFailures(input.numConsecutiveDataFails),
     m_alertTimer(input.alert_timer)
 {
-    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, numConsecutiveWifiFails=%d", 
-           m_batPct, m_shouldEnterConfig, m_numWifiFailures);
+    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, WifiFails=%d, DataFails=%d", 
+           m_batPct, m_shouldEnterConfig, m_numWifiFailures, m_numDataFailures);
 }
 
 TickerOutput TickerCoordinator::run()
@@ -93,8 +94,17 @@ TickerOutput TickerCoordinator::run()
         m_refreshSeconds = constants::SleepSecondsAfterWiFiFail[failLevel-1];
         log_d("Set sleep time to %d", m_refreshSeconds);
     }
+    else if (m_dataFailed) // wifi fail takes priority so this is only if wifi was ok
+    {
+        m_numDataFailures++;
+        log_d("Consecutive data retrieval failure number %d", m_numDataFailures);
+        int failLevel = min(m_numDataFailures, constants::SleepSecondsAfterDataFailLevels);
+        m_refreshSeconds = constants::SleepSecondsAfterDataFail[failLevel-1];
+        log_d("Set sleep time to %d", m_refreshSeconds);
+    }
 
-    TickerOutput output{m_refreshSeconds, m_wifiFailed};
+
+    TickerOutput output{m_refreshSeconds, m_wifiFailed, m_dataFailed};
     return output;
 }
 
@@ -162,9 +172,10 @@ void TickerCoordinator::enterNormalMode()
     {
         // if we do have main price could just write that with a smaller error message below it
         log_d("Could not get all price data");
-        m_displayManager.drawYesWifiNoCrypto(m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr());
+        if (m_numDataFailures > 0) // don't draw on first fail, sleep smallest time and try again first
+            m_displayManager.drawYesWifiNoCrypto(m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr());
         
-        m_refreshSeconds = constants::SleepSecondsAfterDataFail;
+        m_dataFailed = true;
         return;
     }
 
