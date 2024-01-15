@@ -12,6 +12,7 @@ struct TickerInput
     bool shouldEnterConfig;
     int numConsecutiveWifiFails;
     int numConsecutiveDataFails;
+    int bootCount;
     hw_timer_t *alert_timer;
 };
 
@@ -43,6 +44,7 @@ private:
     int m_numDataFailures;
     bool m_wifiFailed = true;
     bool m_dataFailed = false; // default false as don't want to mark it failed if wifi failed
+    int m_bootCount;
 
     void enterConfigMode();
     void enterNormalMode();

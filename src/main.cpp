@@ -62,7 +62,7 @@ void setup()
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true); 
 
-    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, dataFails, alert_timer};
+    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, dataFails, bootCount, alert_timer};
 
     TickerCoordinator ticker(tickerInput);
 

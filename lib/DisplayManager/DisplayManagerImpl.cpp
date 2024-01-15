@@ -210,8 +210,8 @@ void DisplayManagerImpl::drawYesWifiNoCrypto(const String& dayMonth, const Strin
         m_display.print("There was an error connecting");
         m_display.setCursor(5, 95);
         m_display.print("to the data source. Will retry...");
-        m_display.setCursor(5, 115);
-        m_display.print("(Last attempt @ ");
+        m_display.setCursor(1, 115);
+        m_display.print("(Last attempt@");
         m_display.print(dayMonth);
         m_display.print(" ");
         m_display.print(time);

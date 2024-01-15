@@ -8,10 +8,11 @@ TickerCoordinator::TickerCoordinator(const TickerInput& input) :
     m_shouldEnterConfig(input.shouldEnterConfig),
     m_numWifiFailures(input.numConsecutiveWifiFails),
     m_numDataFailures(input.numConsecutiveDataFails),
+    m_bootCount(input.bootCount),
     m_alertTimer(input.alert_timer)
 {
-    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, WifiFails=%d, DataFails=%d", 
-           m_batPct, m_shouldEnterConfig, m_numWifiFailures, m_numDataFailures);
+    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, WifiFails=%d, DataFails=%d, bootCount=%d", 
+           m_batPct, m_shouldEnterConfig, m_numWifiFailures, m_numDataFailures, m_bootCount);
 }
 
 TickerOutput TickerCoordinator::run()
@@ -172,7 +173,8 @@ void TickerCoordinator::enterNormalMode()
     {
         // if we do have main price could just write that with a smaller error message below it
         log_d("Could not get all price data");
-        if (m_numDataFailures > 0) // don't draw on first fail, sleep smallest time and try again first
+        if (m_numDataFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
+                                                       // unless first boot, then do draw it
             m_displayManager.drawYesWifiNoCrypto(m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr());
         
         m_dataFailed = true;
