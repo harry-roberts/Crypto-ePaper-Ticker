@@ -34,7 +34,6 @@ private:
     DisplayManager m_displayManager;
     WiFiManager m_wifiManager;
     CurrentConfig m_cfg;
-    hw_timer_t* m_alertTimer;
 
     int m_refreshSeconds = 300;
     int m_batPct;
@@ -45,6 +44,8 @@ private:
     bool m_wifiFailed = true;
     bool m_dataFailed = false; // default false as don't want to mark it failed if wifi failed
     int m_bootCount;
+
+    hw_timer_t* m_alertTimer;
 
     void enterConfigMode();
     void enterNormalMode();

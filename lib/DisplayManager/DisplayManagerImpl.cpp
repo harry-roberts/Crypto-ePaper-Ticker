@@ -29,8 +29,8 @@ void DisplayManagerImpl::writeDisplay(const String& crypto, const String& fiat, 
     {
         writeDisplaySimple(crypto, fiat, priceData, dayMonth, time, batteryPercent);
     }
-    else if (priceData.size() == 4 && priceData[0] != 0 || priceData[constants::SecondsOneDay] != 0 || 
-        priceData[constants::SecondsOneMonth] != 0 || priceData[constants::SecondsOneYear] != 0)
+    else if (priceData.size() == 4 && (priceData[0] != 0 || priceData[constants::SecondsOneDay] != 0 || 
+        priceData[constants::SecondsOneMonth] != 0 || priceData[constants::SecondsOneYear] != 0))
     {
         writeDisplayAdvanced(crypto, fiat, priceData, dayMonth, time, batteryPercent);
     }

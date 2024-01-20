@@ -125,8 +125,8 @@ bool initSpiffs(const bool formatOnFail)
 
 String getDeviceID()
 {
-    uint8_t mac[6];
-    char macStr[6] = { 0 };
+    uint8_t mac[7];
+    char macStr[7] = { 0 };
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
     sprintf(macStr, "%02x%02x%02x", mac[3], mac[4], mac[5]); // starting 3 is always the same, only need last 3
     return String(macStr);
