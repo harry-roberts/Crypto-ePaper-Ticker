@@ -23,6 +23,14 @@ struct TickerOutput
     bool dataFailed;
 };
 
+enum class TickerWiFiStatus
+{
+    OK,
+    NO_CONNECTION,
+    NO_INTERNET,
+    UNKNOWN
+};
+
 class TickerCoordinator
 {
 public:
@@ -41,7 +49,7 @@ private:
     bool m_initial;
     int m_numWifiFailures;
     int m_numDataFailures;
-    bool m_wifiFailed = true;
+    TickerWiFiStatus m_wifiStatus = TickerWiFiStatus::UNKNOWN;
     bool m_dataFailed = false; // default false as don't want to mark it failed if wifi failed
     int m_bootCount;
 
@@ -50,7 +58,7 @@ private:
     void enterConfigMode();
     void enterNormalMode();
     
-    bool checkWifi();
+    TickerWiFiStatus checkWifi();
 };
 
 

@@ -85,10 +85,16 @@ TickerOutput TickerCoordinator::run()
         enterNormalMode();
     }
 
-    m_displayManager.hibernate();
-
-    if (m_wifiFailed)
+    if (m_wifiStatus != TickerWiFiStatus::OK)
     {
+        if (m_numWifiFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
+                                                       // unless first boot, then do draw it
+        {
+            if (m_wifiStatus == TickerWiFiStatus::NO_CONNECTION)
+                m_displayManager.drawCannotConnectToWifi(m_cfg.ssid, m_cfg.pass);
+            else if (m_wifiStatus == TickerWiFiStatus::NO_INTERNET)
+                m_displayManager.drawWifiHasNoInternet();
+        }
         m_numWifiFailures++;
         log_d("Consecutive WiFi connection failure number %d", m_numWifiFailures);
         int failLevel = min(m_numWifiFailures, constants::SleepSecondsAfterWiFiFailLevels);
@@ -97,6 +103,10 @@ TickerOutput TickerCoordinator::run()
     }
     else if (m_dataFailed) // wifi fail takes priority so this is only if wifi was ok
     {
+        if (m_numDataFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
+                                                       // unless first boot, then do draw it
+            m_displayManager.drawYesWifiNoCrypto(m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr());
+
         m_numDataFailures++;
         log_d("Consecutive data retrieval failure number %d", m_numDataFailures);
         int failLevel = min(m_numDataFailures, constants::SleepSecondsAfterDataFailLevels);
@@ -104,8 +114,9 @@ TickerOutput TickerCoordinator::run()
         log_d("Set sleep time to %d", m_refreshSeconds);
     }
 
+    m_displayManager.hibernate();
 
-    TickerOutput output{m_refreshSeconds, m_wifiFailed, m_dataFailed};
+    TickerOutput output{m_refreshSeconds, m_wifiStatus != TickerWiFiStatus::OK, m_dataFailed};
     return output;
 }
 
@@ -143,13 +154,9 @@ void TickerCoordinator::enterNormalMode()
         m_displayManager.drawConfig(m_cfg.ssid, m_cfg.pass, m_cfg.crypto, m_cfg.fiat, m_cfg.refreshMins.toInt());
 
     m_wifiManager.initNormalMode(m_cfg);
-    if (!checkWifi())
-    {
-        m_wifiFailed = true;
+    m_wifiStatus = checkWifi();
+    if (m_wifiStatus != TickerWiFiStatus::OK)
         return;
-    }
-    else
-        m_wifiFailed = false;
 
     std::set<long> unixOffsets;
     if (m_cfg.displayMode == constants::ConfigDisplayModeSimple)
@@ -172,11 +179,7 @@ void TickerCoordinator::enterNormalMode()
     else
     {
         // if we do have main price could just write that with a smaller error message below it
-        log_d("Could not get all price data");
-        if (m_numDataFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
-                                                       // unless first boot, then do draw it
-            m_displayManager.drawYesWifiNoCrypto(m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr());
-        
+        log_d("Could not get all price data");        
         m_dataFailed = true;
         return;
     }
@@ -184,21 +187,19 @@ void TickerCoordinator::enterNormalMode()
     log_i("Normal mode is complete");
 }
 
-bool TickerCoordinator::checkWifi()
+TickerWiFiStatus TickerCoordinator::checkWifi()
 {
     if (!m_wifiManager.isConnected())
     {
         log_d("Could not connect to given WiFi");
-        m_displayManager.drawCannotConnectToWifi(m_cfg.ssid, m_cfg.pass);
-        return false;
+        return TickerWiFiStatus::NO_CONNECTION;
     }
 
     if (!m_wifiManager.hasInternet())
     {
         // can't get any prices if we don't have internet
         log_d("WiFi couldn't make internet connection");
-        m_displayManager.drawWifiHasNoInternet();
-        return false;
+        return TickerWiFiStatus::NO_INTERNET;
     }
-    return true;
+    return TickerWiFiStatus::OK;
 }
