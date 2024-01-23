@@ -6,6 +6,9 @@
 #include "compile_time.h"
 #include "Constants.h"
 
+namespace WiFiManagerLib
+{
+
 class WiFiManagerTest : public ::testing::Test
 {
 protected:
@@ -43,16 +46,16 @@ TEST_F(WiFiManagerTest, badDetails)
     CurrentConfig badCfg = cfg;
     badCfg.ssid = "not real";
     badCfg.pass = "wrong";
-    wm.initNormalMode(badCfg);
-    EXPECT_EQ(wm.isConnected(), false);
+    auto status = wm.initNormalMode(badCfg);
+    EXPECT_EQ(status, WiFiStatus::NO_CONNECTION);
 }
 
 TEST_F(WiFiManagerTest, connect)
 {
     WiFiManager wm;
-    wm.initNormalMode(cfg);
+    auto status = wm.initNormalMode(cfg);
     EXPECT_EQ(wm.getSsid(), login_ssid);
-    EXPECT_EQ(wm.isConnected(), true);
+    EXPECT_EQ(status, WiFiStatus::OK);
 
     // see compile_time.h
     // expect time is within 24h of test compile time    
@@ -90,7 +93,8 @@ TEST_F(WiFiManagerTest, testBinance)
     EXPECT_NEAR(timePrice_out, 22138.72, 0.1);
 
     WiFiManager wm;
-    wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false);
+    ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(binance));
 
     std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
@@ -124,7 +128,8 @@ TEST_F(WiFiManagerTest, testCoinGecko)
     EXPECT_NEAR(timePrice_out, 29585.39, 0.1);
 
     WiFiManager wm;
-    wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false);
+    ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(coingecko));
 
     std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
@@ -157,7 +162,8 @@ TEST_F(WiFiManagerTest, testKuCoin)
     EXPECT_NEAR(timePrice_out, 32372.62, 0.1);
 
     WiFiManager wm;
-    wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false);
+    ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(kucoin));
 
     std::set<long> unixOffsets{0, constants::SecondsOneDay, constants::SecondsOneMonth, constants::SecondsOneYear};
@@ -169,3 +175,5 @@ TEST_F(WiFiManagerTest, testKuCoin)
         EXPECT_GT(value, 0);
     }
 }
+
+} // namespace WiFiManagerLib

@@ -85,14 +85,14 @@ TickerOutput TickerCoordinator::run()
         enterNormalMode();
     }
 
-    if (m_wifiStatus != TickerWiFiStatus::OK)
+    if (m_wifiStatus != WiFiStatus::OK)
     {
         if (m_numWifiFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
                                                        // unless first boot, then do draw it
         {
-            if (m_wifiStatus == TickerWiFiStatus::NO_CONNECTION)
+            if (m_wifiStatus == WiFiStatus::NO_CONNECTION)
                 m_displayManager.drawCannotConnectToWifi(m_cfg.ssid, m_cfg.pass);
-            else if (m_wifiStatus == TickerWiFiStatus::NO_INTERNET)
+            else if (m_wifiStatus == WiFiStatus::NO_INTERNET)
                 m_displayManager.drawWifiHasNoInternet();
         }
         m_numWifiFailures++;
@@ -116,7 +116,7 @@ TickerOutput TickerCoordinator::run()
 
     m_displayManager.hibernate();
 
-    TickerOutput output{m_refreshSeconds, m_wifiStatus != TickerWiFiStatus::OK, m_dataFailed};
+    TickerOutput output{m_refreshSeconds, m_wifiStatus != WiFiStatus::OK, m_dataFailed};
     return output;
 }
 
@@ -153,9 +153,9 @@ void TickerCoordinator::enterNormalMode()
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_TIMER)
         m_displayManager.drawConfig(m_cfg.ssid, m_cfg.pass, m_cfg.crypto, m_cfg.fiat, m_cfg.refreshMins.toInt());
 
-    m_wifiManager.initNormalMode(m_cfg);
-    m_wifiStatus = checkWifi();
-    if (m_wifiStatus != TickerWiFiStatus::OK)
+    m_wifiStatus = m_wifiManager.initNormalMode(m_cfg);
+    
+    if (m_wifiStatus != WiFiStatus::OK)
         return;
 
     std::set<long> unixOffsets;
@@ -187,19 +187,3 @@ void TickerCoordinator::enterNormalMode()
     log_i("Normal mode is complete");
 }
 
-TickerWiFiStatus TickerCoordinator::checkWifi()
-{
-    if (!m_wifiManager.isConnected())
-    {
-        log_d("Could not connect to given WiFi");
-        return TickerWiFiStatus::NO_CONNECTION;
-    }
-
-    if (!m_wifiManager.hasInternet())
-    {
-        // can't get any prices if we don't have internet
-        log_d("WiFi couldn't make internet connection");
-        return TickerWiFiStatus::NO_INTERNET;
-    }
-    return TickerWiFiStatus::OK;
-}

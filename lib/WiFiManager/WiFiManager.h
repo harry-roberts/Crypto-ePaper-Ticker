@@ -14,7 +14,17 @@
 #include <map>
 #include <set>
 
+namespace WiFiManagerLib
+{
 using utils::CurrentConfig;
+
+enum class WiFiStatus
+{
+    OK,            // has connection with successful internet connection
+    NO_CONNECTION, // couldn't connect to the network
+    NO_INTERNET,   // connected to network but no internet
+    UNKNOWN        // before attempting
+};
 
 class WiFiManager
 {
@@ -22,10 +32,7 @@ public:
     WiFiManager() = default;
 
     void initConfigMode(const CurrentConfig& cfg, int port); // configures access point
-    void initNormalMode(const CurrentConfig& cfg, bool initAllDataSources = true); // connects to known network
-
-    bool isConnected(); // is connected to wifi
-    bool hasInternet(); // have made a successful remote connection (have epoch time)
+    WiFiStatus initNormalMode(const CurrentConfig& cfg, bool initAllDataSources = true); // connects to known network
 
     // input set of unix offsets to get data for
     // return map of unix offsets to price, or empty map if failed
@@ -52,6 +59,8 @@ private:
     void setTimeVars(tm& timeinfo);
     String generateConfigJs(const CurrentConfig& cfg);
 
+    WiFiStatus m_status = WiFiStatus::UNKNOWN;
+
     String m_ssid;
     String m_password;
     std::vector<RequestBasePtr> m_requests;
@@ -67,5 +76,7 @@ private:
     WiFiClientSecure m_client;
     std::unique_ptr<AsyncWebServer> m_server;
 };
+
+} // namespace WiFiManagerLib
 
 #endif

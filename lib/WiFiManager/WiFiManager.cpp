@@ -6,7 +6,10 @@
 
 #include "SPIFFS.h"
 
-void WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSources)
+namespace WiFiManagerLib
+{
+
+WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSources)
 {
     m_ssid = cfg.ssid;
     m_password = cfg.pass;
@@ -48,11 +51,24 @@ void WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSourc
                 setTimeVars(timeinfo);
                 log_d("Time: %s %s", m_dayMonth.c_str(), m_time.c_str());
                 log_d("Epoch: %d", m_epoch);
+                m_status = WiFiStatus::OK;
             }
             timeRetries++;
             delay(500);
         }
+        if (!gotTime)
+        {
+            // we can be confident the NTP pool server will not be down
+            // if we don't have an epoch time, we don't have an internet connection
+            m_status = WiFiStatus::NO_INTERNET;
+        }
     }
+    else
+    {
+        m_status = WiFiStatus::NO_CONNECTION;
+    }
+    
+    return m_status;
 }
 
 void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
@@ -121,7 +137,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
                 log_w("Failed to write config to file");
                 request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">An error occurred, the config was not saved. Restarting device</h1>");
             }
-            else if (doc[constants::ConfigKeySsid].isNull())
+            else if (doc[constants::ConfigKeySsid] == "")
             {
                 request->send(200, "text/html", "<h1 style=\"font-family: Arial, Helvetica, sans-serif;\">No SSID given. Restarting device in config mode.</h1>");
             }
@@ -222,18 +238,6 @@ String WiFiManager::getAPIP()
     return "N/A - Error";
 }
 
-bool WiFiManager::isConnected()
-{
-    return (WiFi.status() == WL_CONNECTED);
-}
-
-bool WiFiManager::hasInternet()
-{
-    // we can be confident the NTP pool server will not be down
-    // if we have an epoch time, we have an internet connection
-    return m_epoch > 0;
-}
-
 void WiFiManager::addDataSource(RequestBasePtr request)
 {
     m_requests.push_back(std::move(request));
@@ -310,7 +314,8 @@ bool WiFiManager::getPriceAtTime(const String& crypto, const String& fiat, time_
 
 String WiFiManager::getUrlContent(const String& server, const String& url)
 {
-    if (!isConnected() || !hasInternet())
+    // check WL_CONNECTED as well as some time may have passed since initial connection 
+    if (m_status != WiFiStatus::OK || WiFi.status() != WL_CONNECTED) 
         return "";
 
     String content;
@@ -401,3 +406,5 @@ void WiFiManager::initAllAvailableDataSources()
     m_requests.push_back(std::make_unique<RequestKuCoin>());
     m_requests.push_back(std::make_unique<RequestBinance>());
 }
+
+} // namespace WiFiManagerLib

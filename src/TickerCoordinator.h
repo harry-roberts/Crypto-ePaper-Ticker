@@ -6,6 +6,8 @@
 #include "WiFiManager.h"
 #include "Utils.h"
 
+using namespace WiFiManagerLib;
+
 struct TickerInput
 {
     int batPercent;
@@ -21,14 +23,6 @@ struct TickerOutput
     int refreshSeconds;
     bool wifiFailed;
     bool dataFailed;
-};
-
-enum class TickerWiFiStatus
-{
-    OK,
-    NO_CONNECTION,
-    NO_INTERNET,
-    UNKNOWN
 };
 
 class TickerCoordinator
@@ -49,7 +43,7 @@ private:
     bool m_initial;
     int m_numWifiFailures;
     int m_numDataFailures;
-    TickerWiFiStatus m_wifiStatus = TickerWiFiStatus::UNKNOWN;
+    WiFiStatus m_wifiStatus = WiFiStatus::UNKNOWN;
     bool m_dataFailed = false; // default false as don't want to mark it failed if wifi failed
     int m_bootCount;
 
@@ -57,8 +51,6 @@ private:
 
     void enterConfigMode();
     void enterNormalMode();
-    
-    TickerWiFiStatus checkWifi();
 };
 
 
