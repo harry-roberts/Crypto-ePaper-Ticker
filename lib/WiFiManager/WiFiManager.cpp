@@ -34,8 +34,6 @@ WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDat
         log_d("Getting time from ntp");
         configTime(0, 0, ntpServer);
 
-        struct tm timeinfo;
-
         log_d("Setting timezone to %s", cfg.tz.c_str());
         setenv("TZ", cfg.tz.c_str(), 1); // will be in config
         tzset();
@@ -45,10 +43,10 @@ WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDat
 
         while (!gotTime && timeRetries < 10)
         {
-            gotTime = getTime(timeinfo);
+            gotTime = getTime(m_timeinfo);
             if (gotTime)
             {
-                setTimeVars(timeinfo);
+                setTimeVars(m_timeinfo);
                 log_d("Time: %s %s", m_dayMonth.c_str(), m_time.c_str());
                 log_d("Epoch: %d", m_epoch);
                 m_status = WiFiStatus::OK;
@@ -107,7 +105,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
         m_server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
         {
             int params = request->params();
-            StaticJsonDocument<512> doc;
+            StaticJsonDocument<768> doc;
             for(int i = 0; i < params; i++)
             {
                 AsyncWebParameter* p = request->getParam(i);
@@ -199,14 +197,46 @@ void WiFiManager::setTimeVars(tm& timeinfo)
 void WiFiManager::refreshTime()
 {
     log_d("Refreshing stored time");
-    struct tm timeinfo;
 
-    if (getTime(timeinfo))
+    if (getTime(m_timeinfo))
     {
-        setTimeVars(timeinfo);
+        setTimeVars(m_timeinfo);
         log_d("Time: %s %s", m_dayMonth.c_str(), m_time.c_str());
         log_d("Epoch: %d", m_epoch);
     }
+}
+
+void WiFiManager::setTimeInfo(int h, int m, int s)
+{
+    m_timeinfo.tm_hour = h;
+    m_timeinfo.tm_min = m;
+    m_timeinfo.tm_sec = s;
+}
+
+// whether a given hour number is between the start and end of the overnight sleep
+bool WiFiManager::isCurrentHourDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep)
+{
+    log_d("The current time is %d:%d:%d", m_timeinfo.tm_hour, m_timeinfo.tm_min, m_timeinfo.tm_sec);
+    log_d("The overnight sleep should start at hour %d and last %d hours", sleepStartHour, sleepHoursLength);
+
+    for (int i = 0; i < sleepHoursLength; i++)
+    {
+        int compareHour = i + sleepStartHour; // could be over 23, i.e. 1am would be value of 25
+        if (compareHour >= 24) compareHour -= 24; // turn a value of e.g. 25 -> 1
+        if (compareHour == m_timeinfo.tm_hour)
+        {
+            log_d("The time is within the overnight sleep period");
+            // full hours left during sleep is length - (i+1)
+            // full time between now and end of sleep is that + the minutes left to next hour number
+            int fullHoursToSleepEnd = sleepHoursLength - (i + 1);
+            int minsToNextHour = 60 - m_timeinfo.tm_min;
+            secondsLeftOfSleep = ((fullHoursToSleepEnd*3600) + (minsToNextHour*60)) - m_timeinfo.tm_sec;
+            log_d("The sleep should last another %" PRIu64 " seconds from now", secondsLeftOfSleep);
+            return true;
+        }
+    }
+    log_d("The time is not within the overnight sleep period");
+    return false;
 }
 
 String WiFiManager::getDayMonthStr()

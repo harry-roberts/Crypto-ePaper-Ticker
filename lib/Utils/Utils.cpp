@@ -160,11 +160,13 @@ ConfigState readConfig(CurrentConfig& cfg)
     String tz = doc[constants::ConfigKeyTimezone].isNull() ? String() : doc[constants::ConfigKeyTimezone];;
     String displayMode = doc[constants::ConfigKeyDisplayMode].isNull() ? String() : doc[constants::ConfigKeyDisplayMode];
     bool is24Hour = doc[constants::ConfigKeyTimeFormat].isNull() ? true : (doc[constants::ConfigKeyTimeFormat] == "1");
+    int overnightSleepStart = doc[constants::ConfigKeyOvernightSleepStart].isNull() ? -1 : doc[constants::ConfigKeyOvernightSleepStart].as<int>();
+    int overnightSleepLength = doc[constants::ConfigKeyOvernightSleepLength].isNull() ? 0 : doc[constants::ConfigKeyOvernightSleepLength].as<int>();
 
-    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s, is24Hour=%d", 
-            ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str(), is24Hour);
+    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s, is24Hour=%d, NightStart=%d, NightLength=%d", 
+            ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str(), is24Hour, overnightSleepStart, overnightSleepLength);
 
-    cfg = CurrentConfig{ssid, pass, crypto, fiat, refreshMins, tz, displayMode, is24Hour};
+    cfg = CurrentConfig{ssid, pass, crypto, fiat, refreshMins, tz, displayMode, is24Hour, overnightSleepStart, overnightSleepLength};
 
     if (cfg.ssid.isEmpty()) // password allowed to be blank, others have defaults in html. Could enforce this in html instead 
         return ConfigState::CONFIG_NO_SSID;

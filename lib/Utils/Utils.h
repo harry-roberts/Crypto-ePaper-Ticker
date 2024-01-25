@@ -18,6 +18,8 @@ struct CurrentConfig
     String tz;
     String displayMode;
     bool is24Hour;
+    int overnightSleepStart;
+    int overnightSleepLength;
 };
 
 enum class ConfigState

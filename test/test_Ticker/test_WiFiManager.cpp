@@ -176,4 +176,39 @@ TEST_F(WiFiManagerTest, testKuCoin)
     }
 }
 
+TEST_F(WiFiManagerTest, testOvernightSleepCalc)
+{
+    WiFiManager wm;
+    uint64_t secondsLeftOfSleep = 0;
+
+    // time 20:30:10, sleep starting 20 lasting 5 hours
+    wm.setTimeInfo(20, 30, 10); 
+    bool isDuringSleep = wm.isCurrentHourDuringOvernightSleep(20, 5, secondsLeftOfSleep);
+    EXPECT_TRUE(isDuringSleep);
+    EXPECT_EQ(secondsLeftOfSleep, 16190);
+
+    // time 21:40:20, sleep starting 22 lasting 5 hours
+    wm.setTimeInfo(21, 40, 20); 
+    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(22, 5, secondsLeftOfSleep);
+    EXPECT_FALSE(isDuringSleep);
+    
+    // time 00:20:30, sleep starting 23 lasting 2 hours
+    wm.setTimeInfo(0, 20, 30); 
+    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(23, 2, secondsLeftOfSleep);
+    EXPECT_TRUE(isDuringSleep);
+    EXPECT_EQ(secondsLeftOfSleep, 2370);
+
+    // time 00:00:00, sleep starting 0 lasting 2 hours
+    wm.setTimeInfo(0, 0, 0); 
+    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(0, 2, secondsLeftOfSleep);
+    EXPECT_TRUE(isDuringSleep);
+    EXPECT_EQ(secondsLeftOfSleep, 7200);
+
+    // time 03:00:00, sleep starting 23 lasting 4 hours
+    wm.setTimeInfo(3, 0, 0); 
+    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(23, 4, secondsLeftOfSleep);
+    EXPECT_FALSE(isDuringSleep);
+
+}
+
 } // namespace WiFiManagerLib

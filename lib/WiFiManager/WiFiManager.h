@@ -41,6 +41,7 @@ public:
     String getDayMonthStr();
     String getTimeStr();
     time_t getEpoch();
+    bool isCurrentHourDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep);
     void refreshTime();
 
     String getSsid();
@@ -49,6 +50,8 @@ public:
     void disconnect();
 
     void addDataSource(RequestBasePtr request);
+
+    void setTimeInfo(int h, int m, int s);
 
 private:
     String getUrlContent(const String& server, const String& url);
@@ -72,6 +75,7 @@ private:
     String m_time = "";          // e.g. "12:34" or "01:23pm"
     time_t m_epoch = -1;         // unix seconds
     bool m_is24Hour = true;
+    struct tm m_timeinfo;
 
     WiFiClientSecure m_client;
     std::unique_ptr<AsyncWebServer> m_server;
