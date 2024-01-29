@@ -55,3 +55,8 @@ void DisplayManager::drawAccessPoint(const String& ip)
 {
     m_impl->drawAccessPoint(ip);
 }
+
+void DisplayManager::drawOvernightSleep()
+{
+    m_impl->drawOvernightSleep();
+}

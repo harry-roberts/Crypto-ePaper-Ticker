@@ -32,7 +32,7 @@ public:
     WiFiManager() = default;
 
     void initConfigMode(const CurrentConfig& cfg, int port); // configures access point
-    WiFiStatus initNormalMode(const CurrentConfig& cfg, bool initAllDataSources = true); // connects to known network
+    WiFiStatus initNormalMode(const CurrentConfig& cfg, bool waitForNtpSync = false, bool initAllDataSources = true); // connects to known network
 
     // input set of unix offsets to get data for
     // return map of unix offsets to price, or empty map if failed
@@ -41,7 +41,7 @@ public:
     String getDayMonthStr();
     String getTimeStr();
     time_t getEpoch();
-    bool isCurrentHourDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep);
+    bool isCurrentTimeDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep);
     void refreshTime();
 
     String getSsid();
@@ -58,7 +58,7 @@ private:
     void initAllAvailableDataSources();
 
     bool getPriceAtTime(const String& crypto, const String& fiat, time_t unixOffset, float& priceAtTime_out, const RequestBasePtr& request);
-    bool getTime(tm& timeinfo);
+    bool getTime(tm& timeinfo, bool waitForNtpSync = false);
     void setTimeVars(tm& timeinfo);
     String generateConfigJs(const CurrentConfig& cfg);
 
@@ -75,7 +75,7 @@ private:
     String m_time = "";          // e.g. "12:34" or "01:23pm"
     time_t m_epoch = -1;         // unix seconds
     bool m_is24Hour = true;
-    struct tm m_timeinfo;
+    struct tm m_timeinfo{};
 
     WiFiClientSecure m_client;
     std::unique_ptr<AsyncWebServer> m_server;

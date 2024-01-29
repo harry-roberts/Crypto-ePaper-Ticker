@@ -93,7 +93,7 @@ TEST_F(WiFiManagerTest, testBinance)
     EXPECT_NEAR(timePrice_out, 22138.72, 0.1);
 
     WiFiManager wm;
-    auto status = wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false, false);
     ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(binance));
 
@@ -128,7 +128,7 @@ TEST_F(WiFiManagerTest, testCoinGecko)
     EXPECT_NEAR(timePrice_out, 29585.39, 0.1);
 
     WiFiManager wm;
-    auto status = wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false, false);
     ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(coingecko));
 
@@ -162,7 +162,7 @@ TEST_F(WiFiManagerTest, testKuCoin)
     EXPECT_NEAR(timePrice_out, 32372.62, 0.1);
 
     WiFiManager wm;
-    auto status = wm.initNormalMode(cfg, false);
+    auto status = wm.initNormalMode(cfg, false, false);
     ASSERT_EQ(status, WiFiStatus::OK);
     wm.addDataSource(std::move(kucoin));
 
@@ -183,30 +183,30 @@ TEST_F(WiFiManagerTest, testOvernightSleepCalc)
 
     // time 20:30:10, sleep starting 20 lasting 5 hours
     wm.setTimeInfo(20, 30, 10); 
-    bool isDuringSleep = wm.isCurrentHourDuringOvernightSleep(20, 5, secondsLeftOfSleep);
+    bool isDuringSleep = wm.isCurrentTimeDuringOvernightSleep(20, 5, secondsLeftOfSleep);
     EXPECT_TRUE(isDuringSleep);
     EXPECT_EQ(secondsLeftOfSleep, 16190);
 
     // time 21:40:20, sleep starting 22 lasting 5 hours
     wm.setTimeInfo(21, 40, 20); 
-    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(22, 5, secondsLeftOfSleep);
+    isDuringSleep = wm.isCurrentTimeDuringOvernightSleep(22, 5, secondsLeftOfSleep);
     EXPECT_FALSE(isDuringSleep);
     
     // time 00:20:30, sleep starting 23 lasting 2 hours
     wm.setTimeInfo(0, 20, 30); 
-    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(23, 2, secondsLeftOfSleep);
+    isDuringSleep = wm.isCurrentTimeDuringOvernightSleep(23, 2, secondsLeftOfSleep);
     EXPECT_TRUE(isDuringSleep);
     EXPECT_EQ(secondsLeftOfSleep, 2370);
 
     // time 00:00:00, sleep starting 0 lasting 2 hours
     wm.setTimeInfo(0, 0, 0); 
-    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(0, 2, secondsLeftOfSleep);
+    isDuringSleep = wm.isCurrentTimeDuringOvernightSleep(0, 2, secondsLeftOfSleep);
     EXPECT_TRUE(isDuringSleep);
     EXPECT_EQ(secondsLeftOfSleep, 7200);
 
     // time 03:00:00, sleep starting 23 lasting 4 hours
     wm.setTimeInfo(3, 0, 0); 
-    isDuringSleep = wm.isCurrentHourDuringOvernightSleep(23, 4, secondsLeftOfSleep);
+    isDuringSleep = wm.isCurrentTimeDuringOvernightSleep(23, 4, secondsLeftOfSleep);
     EXPECT_FALSE(isDuringSleep);
 
 }

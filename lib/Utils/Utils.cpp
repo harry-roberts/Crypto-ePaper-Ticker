@@ -100,6 +100,7 @@ void ticker_hibernate()
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
 
     log_d("Hibernating forever");
+    Serial.flush();
     // will sleep in lowest power forever
     esp_deep_sleep_start(); 
 }
@@ -108,6 +109,7 @@ void ticker_deep_sleep(const uint64_t time)
 {
     // normal deep sleep for time period, rtc memory stays active
     esp_sleep_enable_timer_wakeup(time);
+    Serial.flush();
     esp_deep_sleep_start(); 
 }
 

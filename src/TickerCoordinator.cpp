@@ -9,17 +9,19 @@ TickerCoordinator::TickerCoordinator(const TickerInput& input) :
     m_numWifiFailures(input.numConsecutiveWifiFails),
     m_numDataFailures(input.numConsecutiveDataFails),
     m_bootCount(input.bootCount),
+    m_waitForNtpSync(input.waitForNtpSync),
     m_alertTimer(input.alert_timer)
 {
-    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, WifiFails=%d, DataFails=%d, bootCount=%d", 
-           m_batPct, m_shouldEnterConfig, m_numWifiFailures, m_numDataFailures, m_bootCount);
+    log_d("Created TickerCoordinator with input: batPercent=%d, shouldEnterConfig=%d, WifiFails=%d, DataFails=%d, "
+          "bootCount=%d, waitForNtpSync=%d", 
+           m_batPct, m_shouldEnterConfig, m_numWifiFailures, m_numDataFailures, m_bootCount, m_waitForNtpSync);
 }
 
 TickerOutput TickerCoordinator::run()
 {
     utils::initSpiffs();
 
-    if (m_batPct < 10)
+    if (m_batPct < constants::MinimumAllowedBatteryPercent)
     {
         log_d("battery is below minimum needed");
         bool hasWrittenLowBatWarning = false;
@@ -85,6 +87,8 @@ TickerOutput TickerCoordinator::run()
         enterNormalMode();
     }
 
+    m_wifiManager.disconnect();
+
     if (m_wifiStatus != WiFiStatus::OK)
     {
         if (m_numWifiFailures > 0 || m_bootCount == 1) // don't draw on first fail, sleep smallest time and try again first
@@ -113,10 +117,15 @@ TickerOutput TickerCoordinator::run()
         m_refreshSeconds = constants::SleepSecondsAfterDataFail[failLevel-1];
         log_d("Set sleep time to %d", m_refreshSeconds);
     }
+    else if (m_secondsLeftOfSleep > 0) // we should be in overnight sleep with this many seconds left
+    {
+        log_d("Should be in overnight sleep - updating display");
+        m_displayManager.drawOvernightSleep();
+    }
 
     m_displayManager.hibernate();
 
-    TickerOutput output{m_refreshSeconds, m_wifiStatus != WiFiStatus::OK, m_dataFailed};
+    TickerOutput output{m_refreshSeconds, m_wifiStatus != WiFiStatus::OK, m_dataFailed, m_secondsLeftOfSleep};
     return output;
 }
 
@@ -153,10 +162,20 @@ void TickerCoordinator::enterNormalMode()
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_TIMER)
         m_displayManager.drawConfig(m_cfg.ssid, m_cfg.pass, m_cfg.crypto, m_cfg.fiat, m_cfg.refreshMins.toInt());
 
-    m_wifiStatus = m_wifiManager.initNormalMode(m_cfg);
+    m_wifiStatus = m_wifiManager.initNormalMode(m_cfg, m_waitForNtpSync);
     
     if (m_wifiStatus != WiFiStatus::OK)
         return;
+
+    // check if we are supposed to be on an overnight sleep now that we have the time
+    if (m_cfg.overnightSleepStart >= 0)
+    {
+        bool shouldBeAsleep = m_wifiManager.isCurrentTimeDuringOvernightSleep(m_cfg.overnightSleepStart,
+                                                                            m_cfg.overnightSleepLength,
+                                                                            m_secondsLeftOfSleep);
+        if (shouldBeAsleep)
+            return;
+    }
 
     std::set<long> unixOffsets;
     if (m_cfg.displayMode == constants::ConfigDisplayModeSimple)

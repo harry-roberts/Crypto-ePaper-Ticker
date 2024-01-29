@@ -39,6 +39,9 @@ namespace constants
 
     inline constexpr const char* SpiffsConfigFileName = "/config.json";
     inline constexpr const char* SpiffsBatLogFileName = "/low_battery.txt";
+
+    inline constexpr const int MinimumAllowedBatteryPercent = 10;
+    inline constexpr const int NtpResyncTimeoutSeconds = 15;
 }
 
 #endif

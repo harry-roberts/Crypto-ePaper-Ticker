@@ -30,6 +30,7 @@ public:
     void drawConfig(const String& ssid, const String& password, const String& crypto, const String& fiat,
                     const int refreshInterval);
     void drawAccessPoint(const String& ip);
+    void drawOvernightSleep();
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;

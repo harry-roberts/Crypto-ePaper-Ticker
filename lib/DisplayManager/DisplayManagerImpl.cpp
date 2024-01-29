@@ -315,6 +315,11 @@ void DisplayManagerImpl::drawAccessPoint(const String& ip)
     while (m_display.nextPage());
 }
 
+void DisplayManagerImpl::drawOvernightSleep()
+{
+    writeGenericText("Overnight sleep"); // placeholder
+}
+
 void DisplayManagerImpl::addLines()
 {
     m_display.writeLine(0,       m_crypto_box_y2,

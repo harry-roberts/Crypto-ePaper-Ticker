@@ -3,12 +3,7 @@
 
 #include "TickerCoordinator.h"
 
-/*
-#include "SDLogger.h"
-#include <ESP32Time.h>
-ESP32Time rtc(0);
-DisplayManager dm;
-*/
+#include "esp_sntp.h"
 
 #define BUTTON_PIN 39
 
@@ -18,7 +13,15 @@ RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int wifiFails = 0;
 RTC_DATA_ATTR int dataFails = 0;
 
+RTC_DATA_ATTR int numberOfOvernightSleepPeriodsLeft = 0; // how many individual deep sleeps left in overnight sleep
+RTC_DATA_ATTR int overnightSleepPeriodLength = 0;        // length of each sleep during overnight sleep (seconds)
+RTC_DATA_ATTR bool waitForNtpSync = false;               // after a long sleep time we want to resync before using the time
+
 hw_timer_t *alert_timer = NULL;
+
+void time_sync_notification_cb(struct timeval *tv) {
+    log_d("NTP SYNC");
+}
 
 void IRAM_ATTR onTimer()
 {
@@ -45,6 +48,30 @@ void setup()
     int batPct = utils::battery_percent(utils::battery_read());
     ++bootCount;
 
+    sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+
+    // check for overnight sleeps
+    // in the case of too low battery then ditch the overnight sleep idea and let the screen update 
+    // the display with the warning normally
+    if (batPct >= constants::MinimumAllowedBatteryPercent)
+    {
+        if (numberOfOvernightSleepPeriodsLeft > 0)
+        {
+            // perform another required sleep period
+            numberOfOvernightSleepPeriodsLeft--;
+            log_d("Overnight sleeping for %d seconds, with %d periods left after this", 
+                  overnightSleepPeriodLength, 
+                  numberOfOvernightSleepPeriodsLeft);
+            if (numberOfOvernightSleepPeriodsLeft == 0)
+            {
+                log_d("Ticker will wait for NTP on next reboot");
+                waitForNtpSync = true;
+            }
+            utils::ticker_deep_sleep((uint64_t)overnightSleepPeriodLength * constants::MicrosToSecondsFactor);
+        }
+        
+    }
+
     uint32_t startTime = millis();
     delay(200);
     
@@ -62,7 +89,9 @@ void setup()
     alert_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(alert_timer, &onTimer, true); 
 
-    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, dataFails, bootCount, alert_timer};
+    TickerInput tickerInput{batPct, shouldEnterConfig, wifiFails, dataFails, bootCount, waitForNtpSync, alert_timer};
+    if (waitForNtpSync)
+        waitForNtpSync = false; // only do it once
 
     TickerCoordinator ticker(tickerInput);
 
@@ -78,36 +107,54 @@ void setup()
     else
         dataFails = 0;
 
+    // if overnight sleep value returned, do an overnight sleep period
+    // max deep sleep time of ESP is ~1h10m (unsigned 32 bit number of microseconds)
+    // the internal clock of the ESP isn't great - can be out by ~20 seconds per hour
+    // fine for a single 1 hour sleep but to get it more accurate at the end of the sleep we will aim
+    // to finish a chain of sleeps with 10 minutes remaining, then after resyncing the time with NTP,
+    // the last sleep will be pretty close to the requested end time. 
+    // with a max of 1 hour individual sleep length, calculate minimum number required to get to 10 mins
+    // left of total sleep time, then divide them evenly
+    // E.g. for 100 mins overnight sleep, to get to 10 mins left we have 90 mins, need 2 sleeps of 45 mins
+    if (tickerOutput.secondsLeftOfSleep > 0)
+    {
+        // should either be many hours, or ~10 mins (call it under 1 hour)
+        log_d("Ticker should be in overnight sleep with %" PRIu64 " seconds left", tickerOutput.secondsLeftOfSleep);
+        if (tickerOutput.secondsLeftOfSleep < 3600) // 1 hour, can just sleep this then continue normally
+        {
+            log_d("Final sleep, resetting overnight sleeps");   
+            numberOfOvernightSleepPeriodsLeft = 0;
+            overnightSleepPeriodLength = 0;
+            utils::ticker_deep_sleep((uint64_t)tickerOutput.secondsLeftOfSleep * constants::MicrosToSecondsFactor);
+        }
+        
+        int secondsUntilTenMinutesRemaining = tickerOutput.secondsLeftOfSleep - 600;
+        int minNumberOfSleeps = secondsUntilTenMinutesRemaining / 3600;
+        if (secondsUntilTenMinutesRemaining % 3600 > 0)
+            minNumberOfSleeps++;
+
+        overnightSleepPeriodLength = secondsUntilTenMinutesRemaining / minNumberOfSleeps; // close enough
+        numberOfOvernightSleepPeriodsLeft = minNumberOfSleeps - 1; // -1 as we are about to do one of them
+
+        log_d("Overnight sleeping for %d seconds, with %d periods left after this", 
+              overnightSleepPeriodLength, 
+              numberOfOvernightSleepPeriodsLeft);
+        delay(100);
+        utils::ticker_deep_sleep((uint64_t)overnightSleepPeriodLength * constants::MicrosToSecondsFactor);
+    }
+
+    // if overnight sleep, do first overnight sleep period
+    // the internal clock of the ESP isn't great - can be out by ~20 seconds per hour
+    // fine for a single 1 hour sleep but to get it more accurate at the end of the sleep we will aim
+    // to finish a chain of 1 hour sleeps with 10 minutes remaining, then the last sleep will be pretty
+    // close to the requested end time. 
+    // first sleep should be the amount needed to leave 10mins + integer number of hours
+
     log_i("Program awake time: %d", millis() - startTime);
     // start deep sleep
     log_d("Starting deep sleep for %d seconds", tickerOutput.refreshSeconds);
     Serial.flush();
-    utils::ticker_deep_sleep(tickerOutput.refreshSeconds * constants::MicrosToSecondsFactor);
-
-    
-
-   //rtc.setTime(1609459200); // Jan 1st 2021 00:00
+    utils::ticker_deep_sleep((uint64_t)tickerOutput.refreshSeconds * constants::MicrosToSecondsFactor);
 }
 
-void loop() {
-    /*
-    // battery log sketch
-    float batRead = utils::battery_read();
-    if (utils::battery_percent(batRead) < 5)
-    {
-        dm.drawLowBattery();
-        utils::ticker_hibernate();
-    }
-    SDLogger sd;
-
-    String entry = rtc.getTime("%B %d %Y %H:%M:%S");
-    entry += ",";
-    entry += String(batRead, 3);
-    entry += "\n";
-    sd.appendFile("/bat_test.txt", entry);
-
-    dm.writeGenericText(entry);
-
-    delay(60000);
-    */
-}
+void loop() {}

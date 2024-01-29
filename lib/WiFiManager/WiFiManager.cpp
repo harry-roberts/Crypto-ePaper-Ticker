@@ -5,11 +5,12 @@
 #include <AsyncElegantOTA.h>
 
 #include "SPIFFS.h"
+#include "esp_sntp.h"
 
 namespace WiFiManagerLib
 {
 
-WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDataSources)
+WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool waitForNtpSync, bool initAllDataSources)
 {
     m_ssid = cfg.ssid;
     m_password = cfg.pass;
@@ -43,7 +44,7 @@ WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDat
 
         while (!gotTime && timeRetries < 10)
         {
-            gotTime = getTime(m_timeinfo);
+            gotTime = getTime(m_timeinfo, waitForNtpSync);
             if (gotTime)
             {
                 setTimeVars(m_timeinfo);
@@ -51,8 +52,10 @@ WiFiStatus WiFiManager::initNormalMode(const CurrentConfig& cfg, bool initAllDat
                 log_d("Epoch: %d", m_epoch);
                 m_status = WiFiStatus::OK;
             }
+            else
+                delay(500);
             timeRetries++;
-            delay(500);
+            
         }
         if (!gotTime)
         {
@@ -158,17 +161,31 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
 
 void WiFiManager::disconnect()
 {
+    log_d("Disconnecting from WiFi");
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
 }
 
-bool WiFiManager::getTime(tm& timeinfo)
+bool WiFiManager::getTime(tm& timeinfo, bool waitForNtpSync)
 {
     if(!getLocalTime(&timeinfo))
     {
         log_w("Failed to obtain time");
         return false;
     }
+    if (waitForNtpSync)
+    {
+        // wait until the ntp server has responded
+        uint32_t start = millis();
+        uint32_t end = start + constants::NtpResyncTimeoutSeconds;
+        while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && millis() < end)
+            delay(100);
+        if (millis() >= end)
+            log_w("Did not see an NTP sync");
+        else
+            log_d("Successfully synced time with NTP");
+    }
+
     return true;
 }
 
@@ -214,8 +231,8 @@ void WiFiManager::setTimeInfo(int h, int m, int s)
 }
 
 // whether a given hour number is between the start and end of the overnight sleep
-bool WiFiManager::isCurrentHourDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep)
-{
+bool WiFiManager::isCurrentTimeDuringOvernightSleep(int sleepStartHour, int sleepHoursLength, uint64_t& secondsLeftOfSleep)
+{    
     log_d("The current time is %d:%d:%d", m_timeinfo.tm_hour, m_timeinfo.tm_min, m_timeinfo.tm_sec);
     log_d("The overnight sleep should start at hour %d and last %d hours", sleepStartHour, sleepHoursLength);
 
