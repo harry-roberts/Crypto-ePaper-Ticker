@@ -143,13 +143,6 @@ void setup()
         utils::ticker_deep_sleep((uint64_t)overnightSleepPeriodLength * constants::MicrosToSecondsFactor);
     }
 
-    // if overnight sleep, do first overnight sleep period
-    // the internal clock of the ESP isn't great - can be out by ~20 seconds per hour
-    // fine for a single 1 hour sleep but to get it more accurate at the end of the sleep we will aim
-    // to finish a chain of 1 hour sleeps with 10 minutes remaining, then the last sleep will be pretty
-    // close to the requested end time. 
-    // first sleep should be the amount needed to leave 10mins + integer number of hours
-
     log_i("Program awake time: %d", millis() - startTime);
     // start deep sleep
     log_d("Starting deep sleep for %d seconds", tickerOutput.refreshSeconds);

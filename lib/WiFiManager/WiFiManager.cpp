@@ -177,7 +177,7 @@ bool WiFiManager::getTime(tm& timeinfo, bool waitForNtpSync)
     {
         // wait until the ntp server has responded
         uint32_t start = millis();
-        uint32_t end = start + constants::NtpResyncTimeoutSeconds;
+        uint32_t end = start + (constants::NtpResyncTimeoutSeconds * 1000);
         while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && millis() < end)
             delay(100);
         if (millis() >= end)
