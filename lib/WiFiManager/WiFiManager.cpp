@@ -431,6 +431,10 @@ String WiFiManager::generateConfigJs(const CurrentConfig& cfg)
     configJs += cfg.displayMode;
     configJs += "\", is24Hour: \"";
     configJs += cfg.is24Hour;
+    configJs += "\", overnightStart: \"";
+    configJs += cfg.overnightSleepStart;
+    configJs += "\", overnightLength: \"";
+    configJs += cfg.overnightSleepLength;
     configJs += "\"};";
 
     // var wifis = ["WiFi 1","WiFi 2"];
@@ -445,6 +449,10 @@ String WiFiManager::generateConfigJs(const CurrentConfig& cfg)
 
     configJs += "var deviceIdText = \"Device ID: ";
     configJs += utils::getDeviceID();
+    configJs += "\";";
+    
+    configJs += "var versionNumberText = \"Firmware Version: V";
+    configJs += constants::VersionNumber;
     configJs += "\";";
     
     return configJs;

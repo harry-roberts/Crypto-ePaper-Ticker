@@ -17,9 +17,9 @@ struct CurrentConfig
     String refreshMins;
     String tz;
     String displayMode;
-    bool is24Hour;
-    int overnightSleepStart;
-    int overnightSleepLength;
+    bool is24Hour = true;
+    int overnightSleepStart = -1;
+    int overnightSleepLength = 0;
 };
 
 enum class ConfigState
