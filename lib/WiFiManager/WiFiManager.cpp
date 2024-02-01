@@ -181,9 +181,12 @@ bool WiFiManager::getTime(tm& timeinfo, bool waitForNtpSync)
         while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && millis() < end)
             delay(100);
         if (millis() >= end)
-            log_w("Did not see an NTP sync");
+            log_w("Did not see a requested NTP sync after timeout of %d seconds", constants::NtpResyncTimeoutSeconds);
         else
+        {
             log_d("Successfully synced time with NTP");
+            getLocalTime(&timeinfo); // refresh our stored time with the sync
+        }
     }
 
     return true;
