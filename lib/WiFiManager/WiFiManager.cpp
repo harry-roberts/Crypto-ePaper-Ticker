@@ -7,6 +7,8 @@
 #include "SPIFFS.h"
 #include "esp_sntp.h"
 
+#include "configWebpage.h"
+
 namespace WiFiManagerLib
 {
 
@@ -99,7 +101,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
         // Web Server Root URL
         m_server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
         {
-            request->send(SPIFFS, "/config.html", "text/html");
+            request->send_P(200, "text/html", config_html);
         });
         m_server->on("/config.js", HTTP_GET, [this, cfg](AsyncWebServerRequest *request){
             request->send(200, "text/html", generateConfigJs(cfg));
