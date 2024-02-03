@@ -6,3 +6,6 @@ Crypto only to start with since the data is very easy to get without any kind of
 - Able to perform OTA software updates
 - Battery life of up to 1 month
 - As thin as possible, certainly less than 15mm. I estimate the dimensions will be around 80x40x12mm
+
+#### This Repo 
+This project is built with [PlatformIO](https://platformio.org/). Some files, e.g. custom fonts/bitmaps, project build configuration, and the config webpage are not included here
