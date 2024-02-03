@@ -4,6 +4,8 @@
 #include "compile_time.h"
 #include "Constants.h"
 
+#include "SPIFFS.h"
+
 class UtilsTest : public ::testing::Test
 {
 protected:
@@ -26,4 +28,10 @@ TEST_F(UtilsTest, batteryPercent)
     EXPECT_EQ(utils::battery_percent(3.959), 90);
 
     EXPECT_GT(utils::battery_percent(utils::battery_read()), 0); // it will actually read 100 becasue of plugged in voltage
+}
+
+TEST_F(UtilsTest, DISABLED_formatSpiffs)
+{
+    // can be enabled to format the spiffs partition, i.e. delete everything stored there
+    EXPECT_TRUE(SPIFFS.format());
 }
