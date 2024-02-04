@@ -8,6 +8,7 @@
 #include "esp_sntp.h"
 
 #include "configWebpage.h"
+#include "adminWebpage.h"
 
 namespace WiFiManagerLib
 {
@@ -105,6 +106,12 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
         });
         m_server->on("/config.js", HTTP_GET, [this, cfg](AsyncWebServerRequest *request){
             request->send(200, "text/html", generateConfigJs(cfg));
+        });
+        m_server->on("/admin", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
+            if(!request->authenticate(constants::AdminPageUsername, constants::AdminPagePassword))
+                return request->requestAuthentication();
+            request->send_P(200, "text/html", admin_html);
         });
         m_server->serveStatic("/", SPIFFS, "/");
         m_server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 

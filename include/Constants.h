@@ -42,6 +42,9 @@ namespace constants
 
     inline constexpr const int MinimumAllowedBatteryPercent = 10;
     inline constexpr const int NtpResyncTimeoutSeconds = 15;
+
+    inline constexpr const char* AdminPageUsername = "admin";
+    inline constexpr const char* AdminPagePassword = "pass";
 }
 
 #endif
