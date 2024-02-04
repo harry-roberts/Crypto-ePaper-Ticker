@@ -42,7 +42,6 @@ private:
     int m_refreshSeconds = 300;
     int m_batPct;
     bool m_shouldEnterConfig;
-    bool m_initial;
     int m_numWifiFailures;
     int m_numDataFailures;
     WiFiStatus m_wifiStatus = WiFiStatus::UNKNOWN;

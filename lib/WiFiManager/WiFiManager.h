@@ -26,6 +26,21 @@ enum class WiFiStatus
     UNKNOWN        // before attempting
 };
 
+enum class AdminAction
+{
+    REQUEST_BTC,   // force BTC display update even with no saved config
+    FORMAT_SPIFFS, // force spiffs format
+    NONE           // default
+};
+
+struct AdminRequest
+{
+    String ssid;
+    String password;
+    AdminAction action = AdminAction::NONE;
+    bool set = false;
+};
+
 class WiFiManager
 {
 public:
@@ -53,6 +68,9 @@ public:
 
     void setTimeInfo(int h, int m, int s);
 
+    AdminRequest getAdminRequest();
+    void resetAdminRequest();
+
 private:
     String getUrlContent(const String& server, const String& url);
     void initAllAvailableDataSources();
@@ -78,6 +96,8 @@ private:
 
     WiFiClientSecure m_client;
     std::unique_ptr<AsyncWebServer> m_server;
+
+    AdminRequest m_adminRequest;
 };
 
 } // namespace WiFiManagerLib

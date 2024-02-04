@@ -139,7 +139,37 @@ void TickerCoordinator::enterConfigMode()
 
     // async server alive in background, it will restart device when config received
     log_i("Config mode is complete - waiting for config to be received");
-    while(true){}
+    while(true)
+    {
+        AdminRequest req = m_wifiManager.getAdminRequest();
+        if (req.set)
+        {
+            switch(req.action)
+            {
+                case AdminAction::REQUEST_BTC:
+                    log_d("Received admin action to request BTC, ssid=%s pass=%s", req.ssid, req.password);
+                    m_cfg = CurrentConfig{req.ssid, req.password, "BTC", "USD", "60", 
+                                          "GMT0BST,M3.5.0/1,M10.5.0", "simple"};
+                    enterNormalMode();
+                    log_d("Finished admin action");
+                    // access point no longer active now since we entered normal mode
+                    // probably don't want to do anything further after this anyway
+                    break;
+                case AdminAction::FORMAT_SPIFFS:
+                {
+                    log_d("Received admin action to format SPIFFS");
+                    bool success = SPIFFS.format();
+                    log_d("SPIFFS formatted with result=%d", success);
+                    break;
+                }
+                case AdminAction::NONE:
+                default:
+                    break;
+            }
+            m_wifiManager.resetAdminRequest();
+        }
+        delay(500);
+    }
 }
 
 void TickerCoordinator::enterNormalMode()

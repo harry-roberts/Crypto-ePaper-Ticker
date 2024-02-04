@@ -113,6 +113,34 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
                 return request->requestAuthentication();
             request->send_P(200, "text/html", admin_html);
         });
+        m_server->on("/admin", HTTP_POST, [this](AsyncWebServerRequest *request)
+        {
+            int params = request->params();
+            for(int i = 0; i < params; i++)
+            {
+                AsyncWebParameter* p = request->getParam(i);
+                if(p->isPost())
+                {
+                    if (p->name() == "adminaction")
+                    {
+                        log_d("admin action %s requested", p->value().c_str());
+                        m_adminRequest.action = static_cast<AdminAction>(p->value().toInt());
+                    }
+                    else if (p->name() == constants::ConfigKeySsid)
+                    {
+                        log_d("admin ssid: %s", p->value().c_str());
+                        m_adminRequest.ssid = p->value().c_str();
+                    }
+                    else if (p->name() == constants::ConfigKeyPassword)
+                    {
+                        log_d("admin pass: %s", p->value().c_str());
+                        m_adminRequest.password = p->value().c_str();
+                    }
+                    m_adminRequest.set = true;
+                }
+            }
+            request->send_P(200, "text/html", admin_html);
+        });
         m_server->serveStatic("/", SPIFFS, "/");
         m_server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) 
         {
@@ -166,6 +194,16 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
 
         m_server->begin();
     }
+}
+
+AdminRequest WiFiManager::getAdminRequest()
+{
+    return m_adminRequest;
+}
+
+void WiFiManager::resetAdminRequest()
+{
+    m_adminRequest = AdminRequest{};
 }
 
 void WiFiManager::disconnect()
