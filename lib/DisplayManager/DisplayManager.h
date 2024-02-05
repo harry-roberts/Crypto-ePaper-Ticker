@@ -26,6 +26,7 @@ public:
                     const int refreshInterval);
     void drawAccessPoint(const String& ip);
     void drawOvernightSleep();
+    void fillScreen();
 
 private:
     std::unique_ptr<DisplayManagerImpl> m_impl;

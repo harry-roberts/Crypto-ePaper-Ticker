@@ -320,6 +320,17 @@ void DisplayManagerImpl::drawOvernightSleep()
     writeGenericText("Overnight sleep"); // placeholder
 }
 
+void DisplayManagerImpl::fillScreen()
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_BLACK);
+    }
+    while (m_display.nextPage());
+}
+
 void DisplayManagerImpl::addLines()
 {
     m_display.writeLine(0,       m_crypto_box_y2,

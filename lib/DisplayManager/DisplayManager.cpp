@@ -60,3 +60,8 @@ void DisplayManager::drawOvernightSleep()
 {
     m_impl->drawOvernightSleep();
 }
+
+void DisplayManager::fillScreen()
+{
+    m_impl->fillScreen();
+}

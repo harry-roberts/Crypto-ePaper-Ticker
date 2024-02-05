@@ -162,6 +162,10 @@ void TickerCoordinator::enterConfigMode()
                     log_d("SPIFFS formatted with result=%d", success);
                     break;
                 }
+                case AdminAction::FILL_SCREEN:
+                    log_d("Received admin action to fill screen");
+                    m_displayManager.fillScreen();
+                    break;
                 case AdminAction::NONE:
                 default:
                     break;

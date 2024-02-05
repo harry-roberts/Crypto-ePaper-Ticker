@@ -31,6 +31,7 @@ public:
                     const int refreshInterval);
     void drawAccessPoint(const String& ip);
     void drawOvernightSleep();
+    void fillScreen();
 
 private:
     friend class ::DisplayManagerTest_formatPrice_Test;

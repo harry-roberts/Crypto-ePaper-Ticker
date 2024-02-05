@@ -30,6 +30,7 @@ enum class AdminAction
 {
     REQUEST_BTC,   // force BTC display update even with no saved config
     FORMAT_SPIFFS, // force spiffs format
+    FILL_SCREEN,   // draw every pixel black
     NONE           // default
 };
 
