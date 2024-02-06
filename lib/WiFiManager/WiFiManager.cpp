@@ -136,9 +136,10 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
                         log_d("admin pass: %s", p->value().c_str());
                         m_adminRequest.password = p->value().c_str();
                     }
-                    m_adminRequest.set = true;
                 }
             }
+            if (m_adminRequest.action != AdminAction::NONE)
+                m_adminRequest.set = true;
             request->send_P(200, "text/html", admin_html);
         });
         m_server->serveStatic("/", SPIFFS, "/");

@@ -39,7 +39,7 @@ struct AdminRequest
     String ssid;
     String password;
     AdminAction action = AdminAction::NONE;
-    bool set = false;
+    bool set = false; // after we have finished looking at all params from the POST set this true
 };
 
 class WiFiManager
