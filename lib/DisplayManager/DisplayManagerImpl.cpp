@@ -501,7 +501,7 @@ bool DisplayManagerImpl::writePriceChange(const float mainPrice, const float pri
         m_display.setFont(&FreeMonoBold12pt7b);
     m_display.setTextColor(GxEPD_BLACK);
 
-    float percentChange = ((mainPrice - priceToCompare) / mainPrice) * 100;
+    float percentChange = ((mainPrice - priceToCompare) / priceToCompare) * 100;
 
     String changeLine = formatPriceChangeString(percentChange, timeframe);
 
