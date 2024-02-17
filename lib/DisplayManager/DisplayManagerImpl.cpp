@@ -318,7 +318,22 @@ void DisplayManagerImpl::drawAccessPoint(const String& ip)
 
 void DisplayManagerImpl::drawOvernightSleep()
 {
-    writeGenericText("Overnight sleep"); // placeholder
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(8, 6, epd_bitmap_overnight_sleep, 107, 111, GxEPD_BLACK);
+
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setCursor(133, 53);
+        m_display.print("Overnight");
+        m_display.setCursor(153, 83);
+        m_display.print("Sleep");
+    }
+    while (m_display.nextPage());
 }
 
 void DisplayManagerImpl::fillScreen()
