@@ -164,11 +164,12 @@ ConfigState readConfig(CurrentConfig& cfg)
     bool is24Hour = doc[constants::ConfigKeyTimeFormat].isNull() ? true : (doc[constants::ConfigKeyTimeFormat] == "1");
     int overnightSleepStart = doc[constants::ConfigKeyOvernightSleepStart].isNull() ? -1 : doc[constants::ConfigKeyOvernightSleepStart].as<int>();
     int overnightSleepLength = doc[constants::ConfigKeyOvernightSleepLength].isNull() ? 0 : doc[constants::ConfigKeyOvernightSleepLength].as<int>();
+    bool simpleBattery = doc[constants::ConfigKeyDisplaySimpleBattery].isNull() ? true : (doc[constants::ConfigKeyDisplaySimpleBattery] == "1");
 
-    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s, is24Hour=%d, NightStart=%d, NightLength=%d", 
-            ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str(), is24Hour, overnightSleepStart, overnightSleepLength);
+    log_d("Read config: ssid=%s, pass=%s, crypto=%s, fiat=%s, refresh mins=%s, display mode=%s, timezone=%s, is24Hour=%d, NightStart=%d, NightLength=%d, simpleBattery=%d", 
+            ssid, pass, crypto, fiat, refreshMins, displayMode, tz.c_str(), is24Hour, overnightSleepStart, overnightSleepLength, simpleBattery);
 
-    cfg = CurrentConfig{ssid, pass, crypto, fiat, refreshMins, tz, displayMode, is24Hour, overnightSleepStart, overnightSleepLength};
+    cfg = CurrentConfig{ssid, pass, crypto, fiat, refreshMins, tz, displayMode, is24Hour, overnightSleepStart, overnightSleepLength, simpleBattery};
 
     if (cfg.ssid.isEmpty()) // password allowed to be blank, others have defaults in html. Could enforce this in html instead 
         return ConfigState::CONFIG_NO_SSID;

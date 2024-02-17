@@ -115,6 +115,7 @@ void WiFiManager::initConfigMode(const CurrentConfig& cfg, int port)
         });
         m_server->on("/admin", HTTP_POST, [this](AsyncWebServerRequest *request)
         {
+            resetAdminRequest();
             int params = request->params();
             for(int i = 0; i < params; i++)
             {
@@ -483,6 +484,8 @@ String WiFiManager::generateConfigJs(const CurrentConfig& cfg)
     configJs += cfg.overnightSleepStart;
     configJs += "\", overnightLength: \"";
     configJs += cfg.overnightSleepLength;
+    configJs += "\", simpleBattery: \"";
+    configJs += cfg.showSimpleBattery;
     configJs += "\"};";
 
     // var wifis = ["WiFi 1","WiFi 2"];

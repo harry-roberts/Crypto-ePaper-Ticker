@@ -49,7 +49,8 @@ private:
     void writeCrypto(const String& crypto, const bool centre = false);
     void writeDateTimeAdvanced(const String& dayMonth, const String& time);
     void writeDateTimeSimple(const String& dayMonth, const String& time);
-    void writeBattery(const int batPct);
+    void writeBatteryAdvanced(const int batPct);
+    void writeBatterySimple(const int batPct);
     bool writePriceChange(const float mainPrice, const float priceToCompare, const String& timeframe, const int yOffset, 
                           const bool centre = false);
 

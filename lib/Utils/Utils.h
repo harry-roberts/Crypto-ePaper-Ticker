@@ -20,6 +20,7 @@ struct CurrentConfig
     bool is24Hour = true;
     int overnightSleepStart = -1;
     int overnightSleepLength = 0;
+    bool showSimpleBattery = true;
 };
 
 enum class ConfigState

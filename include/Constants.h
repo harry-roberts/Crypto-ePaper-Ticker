@@ -21,6 +21,7 @@ namespace constants
     inline constexpr const char* ConfigKeyTimeFormat = "o";
     inline constexpr const char* ConfigKeyOvernightSleepStart = "n";
     inline constexpr const char* ConfigKeyOvernightSleepLength = "l";
+    inline constexpr const char* ConfigKeyDisplaySimpleBattery = "b";
 
     inline constexpr const char* ConfigDisplayModeSimple = "simple";
     inline constexpr const char* ConfigDisplayModeAdvanced = "advanced";

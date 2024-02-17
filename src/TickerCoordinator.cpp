@@ -224,10 +224,14 @@ void TickerCoordinator::enterNormalMode()
     // requests may have taken some time, refresh so display will show time at point of update
     m_wifiManager.refreshTime(); 
 
+    bool shouldDisplayBattery = (m_cfg.showSimpleBattery && m_cfg.displayMode == constants::ConfigDisplayModeSimple) ||
+                                m_cfg.displayMode == constants::ConfigDisplayModeAdvanced;
+
     if (!priceData.empty())
     {
         m_displayManager.writeDisplay(m_cfg.crypto, m_cfg.fiat, priceData, 
-                                      m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr(), m_batPct);
+                                      m_wifiManager.getDayMonthStr(), m_wifiManager.getTimeStr(), 
+                                      shouldDisplayBattery ? m_batPct : 0);
     }
     else
     {

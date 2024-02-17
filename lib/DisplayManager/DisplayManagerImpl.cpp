@@ -57,7 +57,7 @@ void DisplayManagerImpl::writeDisplayAdvanced(const String& crypto, const String
         writeMainPriceAdvanced(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
         writeCrypto(crypto);
         writeDateTimeAdvanced(dayMonth, time);
-        writeBattery(batteryPercent);
+        writeBatteryAdvanced(batteryPercent);
 
         // could try and split them by thirds but these offsets fit well
         drawArrow(writePriceChange(priceData[0], priceData[constants::SecondsOneDay], "1d", -6));
@@ -82,6 +82,7 @@ void DisplayManagerImpl::writeDisplaySimple(const String& crypto, const String& 
         writeMainPriceSimple(m_fiatSymbols[fiat] + formatPriceString(priceData[0]));
         writePriceChange(priceData[0], priceData[constants::SecondsOneDay], "1 day", 48, true);
         writeDateTimeSimple(dayMonth, time);
+        writeBatterySimple(batteryPercent);
     }
     while (m_display.nextPage());
 }
@@ -465,7 +466,7 @@ void DisplayManagerImpl::writeDateTimeSimple(const String& dayMonth, const Strin
     m_display.print(time);
 }
 
-void DisplayManagerImpl::writeBattery(const int batPct)
+void DisplayManagerImpl::writeBatteryAdvanced(const int batPct)
 {
     // write number
     m_display.setFont(&Org_01);
@@ -490,6 +491,23 @@ void DisplayManagerImpl::writeBattery(const int batPct)
     m_display.fillRect(0,             m_max_y-drawHeightInt,
                     m_date_box_x1, m_max_y,
                     GxEPD_BLACK);
+}
+
+void DisplayManagerImpl::writeBatterySimple(const int batPct)
+{
+    if (!batPct) return;
+    // draw a 1 pixel wide line below the crypto box, centred on screen
+    float lineLength = m_crypto_box_x2 * (batPct / 100.0);
+    int totalMissing = m_crypto_box_x2 - (int)lineLength;
+    int startX = (m_max_x-m_crypto_box_x2)/2 + (totalMissing / 2);
+    int endX = (startX + lineLength) - 1;
+
+    log_d("Crypto box width=%d, line length=%d, total missing=%d, startX=%d, endX=%d", 
+          m_crypto_box_x2, (int)(lineLength), totalMissing, startX, endX);
+
+    m_display.writeLine(startX, m_crypto_box_y2+1,
+                        endX, m_crypto_box_y2+1,
+                        GxEPD_BLACK);
 }
 
 bool DisplayManagerImpl::writePriceChange(const float mainPrice, const float priceToCompare, const String& timeframe, 
