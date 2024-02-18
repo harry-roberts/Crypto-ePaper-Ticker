@@ -69,7 +69,7 @@ TickerOutput TickerCoordinator::run()
 
     if (m_shouldEnterConfig)
     {
-        m_displayManager.writeGenericText("Starting config mode...");
+        m_displayManager.drawStartingConfigMode();
         enterConfigMode();
     }
     else if (cfgState == utils::ConfigState::CONFIG_FAIL)

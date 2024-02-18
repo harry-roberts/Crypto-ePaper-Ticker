@@ -61,6 +61,11 @@ void DisplayManager::drawOvernightSleep()
     m_impl->drawOvernightSleep();
 }
 
+void DisplayManager::drawStartingConfigMode()
+{
+    m_impl->drawStartingConfigMode();
+}
+
 void DisplayManager::fillScreen()
 {
     m_impl->fillScreen();

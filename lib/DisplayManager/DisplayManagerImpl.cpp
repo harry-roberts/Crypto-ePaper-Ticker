@@ -336,6 +336,28 @@ void DisplayManagerImpl::drawOvernightSleep()
     while (m_display.nextPage());
 }
 
+void DisplayManagerImpl::drawStartingConfigMode()
+{
+    m_display.setFullWindow();
+    m_display.firstPage();
+    do
+    {
+        m_display.fillScreen(GxEPD_WHITE);
+
+        m_display.drawBitmap(4, 4, epd_bitmap_loading_config_mode, 114, 114, GxEPD_BLACK);
+
+        m_display.setTextColor(GxEPD_BLACK);
+        m_display.setFont(&FreeSans12pt7b);
+        m_display.setCursor(135, 40);
+        m_display.print("Starting");
+        m_display.setCursor(141, 70);
+        m_display.print("Config");
+        m_display.setCursor(146, 100);
+        m_display.print("Mode");
+    }
+    while (m_display.nextPage());
+}
+
 void DisplayManagerImpl::fillScreen()
 {
     m_display.setFullWindow();

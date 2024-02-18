@@ -26,6 +26,7 @@ public:
                     const int refreshInterval);
     void drawAccessPoint(const String& ip);
     void drawOvernightSleep();
+    void drawStartingConfigMode();
     void fillScreen();
 
 private:
