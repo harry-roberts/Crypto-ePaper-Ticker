@@ -9,3 +9,20 @@ Crypto only to start with since the data is very easy to get without any kind of
 
 #### This Repo 
 This project is built with [PlatformIO](https://platformio.org/). Some files, e.g. custom fonts/bitmaps, project build configuration, and the config webpage are not included here
+
+#### Real Product
+These are some pictures of the final product in its 3D printed case. It measures 82x43x14mm.
+
+<p align="center">
+  <img src="images/ticker_simple.png"/>
+</p>
+<p align="center"><em>
+	Real ticker in "simple" display mode
+</em></p>
+<br>
+<p align="center">
+  <img src="images/ticker_advanced.png"/>
+</p>
+<p align="center"><em>
+	Real ticker in "advanced" display mode
+</em></p>
