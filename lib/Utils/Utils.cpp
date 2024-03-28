@@ -140,7 +140,7 @@ ConfigState readConfig(CurrentConfig& cfg)
     if (!utils::initSpiffs())
     {
         log_w("Could not init spiffs");
-        return ConfigState::CONFIG_FAIL;
+        return ConfigState::CONFIG_SPIFFS_ERROR;
     }
 
     File file = SPIFFS.open(constants::SpiffsConfigFileName);
@@ -149,8 +149,8 @@ ConfigState readConfig(CurrentConfig& cfg)
     file.close();
     if (error)
     {
-        log_w("Couldn't read config");
-        return ConfigState::CONFIG_FAIL;
+        log_w("Couldn't read config, error=%d", error);
+        return ConfigState::CONFIG_NO_FILE;
     }
 
     // ArduinoJSON will set an actual string value of "null" if key is empty, so check for it and set our own empty string

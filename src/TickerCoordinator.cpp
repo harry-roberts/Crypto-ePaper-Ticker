@@ -72,9 +72,17 @@ TickerOutput TickerCoordinator::run()
         m_displayManager.drawStartingConfigMode();
         enterConfigMode();
     }
-    else if (cfgState == utils::ConfigState::CONFIG_FAIL)
+    else if (cfgState == utils::ConfigState::CONFIG_FAIL || 
+             cfgState == utils::ConfigState::CONFIG_SPIFFS_ERROR)
     {
-        m_displayManager.writeGenericText("Error with given config\nRestarting in config mode");
+        String s = "Error with given config\nRestarting in config mode\nCode=";
+        s += String((int)cfgState);
+        m_displayManager.writeGenericText(s);
+        enterConfigMode();
+    }
+    else if (cfgState == utils::ConfigState::CONFIG_NO_FILE)
+    {
+        m_displayManager.writeGenericText("No config on device\nRestarting in config mode");
         enterConfigMode();
     }
     else if (cfgState == utils::ConfigState::CONFIG_NO_SSID)

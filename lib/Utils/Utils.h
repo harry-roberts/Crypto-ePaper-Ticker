@@ -25,9 +25,11 @@ struct CurrentConfig
 
 enum class ConfigState
 {
-    CONFIG_OK,       // the config was read successfully
-    CONFIG_NO_SSID,  // ssid was missing, should be only value that is possible as blank
-    CONFIG_FAIL      // something failed, couldn't read config
+    CONFIG_OK,           // the config was read successfully
+    CONFIG_NO_SSID,      // ssid was missing, should be only value that is possible as blank
+    CONFIG_NO_FILE,      // couldn't read the config file from spiffs
+    CONFIG_SPIFFS_ERROR, // error init spiffs
+    CONFIG_FAIL          // something failed, couldn't read config
 };
 
 float raw_voltage();
